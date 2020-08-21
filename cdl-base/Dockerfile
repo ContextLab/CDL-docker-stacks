@@ -2,11 +2,9 @@
 ARG BASE_IMAGE=debian:stretch
 
 FROM $BASE_IMAGE
-MAINTAINER Paxton Fitzpatrick <paxton.c.fitzpatrick@dartmouth.edu>
+LABEL maintainer="Paxton Fitzpatrick <paxton.c.fitzpatrick@dartmouth.edu>"
 
-# define other build-time variables
-ARG USER=root
-# (like setting variable via ENV, but doesn't persist after build)
+# (like setting via ENV, but doesn't persist after build)
 ARG DEBIAN_FRONTEND=noninteractive
 
 # set locale
