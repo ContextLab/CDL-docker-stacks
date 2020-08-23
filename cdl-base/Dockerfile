@@ -10,6 +10,9 @@ ARG DEBIAN_FRONTEND=noninteractive
 # set locale
 ENV LANG C.UTF-8
 
+# use bash as shell
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # uncomment line in skeleton .bashrc to enable terminal colors, install basic apt packages
 RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc && \
     apt-get update --fix-missing && \
