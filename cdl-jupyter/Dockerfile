@@ -10,7 +10,7 @@ ARG PIP_VERSION=""
 ARG PIP_PACKAGES=""
 ARG WORKDIR="/mnt"
 ARG NOTEBOOK_IP=0.0.0.0
-ARG PORT=9999
+ARG PORT=8888
 
 # set build args read by jupyter_notebook_config.py to environment variables
 ENV NOTEBOOK_DIR $WORKDIR
