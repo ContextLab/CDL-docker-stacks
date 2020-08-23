@@ -18,7 +18,6 @@ RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashr
     apt-get update --fix-missing && \
     apt-get install -y --no-install-recommends eatmydata && \
     eatmydata apt-get install -y --no-install-recommends \
-    ca-certificates \
     mpich \
     procps \
     sudo \
