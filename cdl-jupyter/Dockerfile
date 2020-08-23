@@ -29,6 +29,10 @@ ENV NOTEBOOK_PORT $PORT
 #   - turn of Jedi autocomplete (evaluates code on TAB)
 #   - install & enable some handy notebook extensions
 RUN echo "Building with Python $PYTHON_VERSION" && \
+    apt-get update --fix-missing &&
+    eatmydata apt-get install -y --no-install-recommends \
+        bc \
+        bzip2 \
     if [ ! -z $APT_PACKAGES ]; then { apt-get update --fix-missing eatmydata && \
                                       apt-get install -y --no-install-recommends $APT_PACKAGES && \
                                       rm -rf /var/lib/apt/lists/* }; fi && \
