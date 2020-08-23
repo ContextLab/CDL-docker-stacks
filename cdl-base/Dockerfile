@@ -10,11 +10,9 @@ ARG DEBIAN_FRONTEND=noninteractive
 # set locale
 ENV LANG C.UTF-8
 
-# uncomment line in skeleton .bashrc to enable terminal colors
-RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc
-
-# install very basic packages
-RUN apt-get update --fix-missing && \
+# uncomment line in skeleton .bashrc to enable terminal colors, install basic apt packages
+RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc && \
+    apt-get update --fix-missing && \
     apt-get install -y eatmydata && \
     eatmydata apt-get install -y --no-install-recommends \
     bc \
