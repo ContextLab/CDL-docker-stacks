@@ -19,8 +19,7 @@ ENV NOTEBOOK_PORT $PORT
 
 # reduce layers by combining a bunch of conditional steps:
 #   - install additional apt packages
-#   - update Python version
-#   - update pip
+#   - upgrade/downgrade pip
 #   - install additional Python packages
 # with definite steps:
 #   - ensure setuptools is up to date
@@ -77,9 +76,6 @@ WORKDIR $WORKDIR
 # (can be overridden for interactive session via args to docker run or docker exec)
 ENTRYPOINT ["tini", "-g", "--"]
 CMD ["jupyter", "notebook"]
-
-# expose port for notebook server
-EXPOSE $PORT
 
 # copy in files as late as possible
 COPY jupyter_notebook_config.py $HOME/.jupyter/
