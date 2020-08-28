@@ -43,8 +43,18 @@ RUN conda update -S setupools \
         pandas-profiling=1.4.1 \
         plotly=4.8.2 \
         pymysql=0.9.3 \
+        python-dateutil=2.8.1 \
+        requests=2.24.0 \
+        requests-ftp=0.3.1 \
+        requests-kerberos=0.12.0 \
+        scikit-image=0.16.2 \
+        scikit-learn=0.23.1 \
+        scipy=1.5.0 \
         seaborn=0.10.1 \
-
-
-
-
+        sqlalchemy=1.3.18 \
+        sqlalchemy-utils=0.36.5 \
+        statsmodels=0.11.1 \
+        sympy=1.6.1 \
+        urllib3=1.25.9 \
+        word2vec=0.9.4 \
+        xlrd=1.2.0
