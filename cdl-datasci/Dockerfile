@@ -57,4 +57,5 @@ RUN conda update -S setupools \
         sympy=1.6.1 \
         urllib3=1.25.9 \
         word2vec=0.9.4 \
-        xlrd=1.2.0
+        xlrd=1.2.0 \
+    && conda clean --all -f -y
