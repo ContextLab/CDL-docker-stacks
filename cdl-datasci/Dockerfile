@@ -22,12 +22,19 @@ WORKDIR $WORKDIR
 
 # again, reduce layers by combining a bunch of conditional steps:
 #   - install additional apt packages
+#   - install additional conda packages
 #   - upgrade/downgrade pip
-#   - install additional Python packages
+#   - install additional pip packages
 # with definite steps:
 #   - ensure setuptools is up to date
-#   - install various common data science-related packages
-RUN conda update -S setupools \
+#   - install various common data science-related packages via conda
+RUN echo "Building with Python $PYTHON_VERSION" \
+    && if [ ! -z $APT_PACKAGES ]; then \
+           apt-get update --fix-missing \
+           && eatmydata apt-get install -y --no-install-recommends $APT_PACKAGES \
+           && rm -rf /var/lib/apt/lists/*; \
+       fi \
+    && conda update -S setupools \
     && conda install -Sy \
         beautifulsoup4=4.9.1 \
         bokeh=2.1.1 \
@@ -58,4 +65,11 @@ RUN conda update -S setupools \
         urllib3=1.25.9 \
         word2vec=0.9.4 \
         xlrd=1.2.0 \
-    && conda clean --all -f -y
+        $CONDA_PACKAGES \
+    && if [ ! -z $PIP_VERSION ]; then \
+           conda install -Sy pip=$PIP_VERSION; \
+       fi \
+    && conda clean --all -f -y \
+    && if [ ! -z $PIP_PACKAGES ]; then \
+           pip install --no-cache-dir $PIP_PACKAGES; \
+       fi
