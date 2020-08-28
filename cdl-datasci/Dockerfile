@@ -27,7 +27,7 @@ WORKDIR $WORKDIR
 #   - install additional pip packages
 # with definite steps:
 #   - ensure setuptools is up to date
-#   - install various common data science-related packages via conda
+#   - install various common data science-related packages
 RUN echo "Building with Python $PYTHON_VERSION" \
     && if [ ! -z $APT_PACKAGES ]; then \
            apt-get update --fix-missing \
@@ -62,6 +62,7 @@ RUN echo "Building with Python $PYTHON_VERSION" \
         sqlalchemy-utils=0.36.5 \
         statsmodels=0.11.1 \
         sympy=1.6.1 \
+        umap-learn=0.4.6 \
         urllib3=1.25.9 \
         word2vec=0.9.4 \
         xlrd=1.2.0 \
