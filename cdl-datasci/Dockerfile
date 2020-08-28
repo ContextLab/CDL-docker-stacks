@@ -50,6 +50,7 @@ RUN echo "Building with Python $PYTHON_VERSION" \
         pandas-profiling=1.4.1 \
         plotly=4.8.2 \
         pymysql=0.9.3 \
+        pynndescent=0.4.8 \
         python-dateutil=2.8.1 \
         requests=2.24.0 \
         requests-ftp=0.3.1 \
