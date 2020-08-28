@@ -70,6 +70,7 @@ RUN echo "Building with Python $PYTHON_VERSION" \
            conda install -Sy pip=$PIP_VERSION; \
        fi \
     && conda clean --all -f -y \
-    && if [ ! -z $PIP_PACKAGES ]; then \
-           pip install --no-cache-dir $PIP_PACKAGES; \
-       fi
+    && pip install --no-cache-dir \
+           git+https://github.com/ContextLab/hypertools.git@dea0df127b150c39ed9a7b1faaa8fbde089ee834 \
+           quail==0.2.0 \
+           $PIP_PACKAGES
