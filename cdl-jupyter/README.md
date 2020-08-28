@@ -52,19 +52,21 @@ Arg | Default value | Description
 - **List of pre-installed packages for this image**:
    - `apt` packages:
    
-      No additional packages installed for this image. See the [cdl-base image README](https://github.com/ContextLab/cdl-docker-stack/tree/master/cdl-base/README.md) for a full list.
+      No additional packages installed for this image. See the [cdl-base image README](https://github.com/ContextLab/cdl-docker-stacks/tree/master/cdl-base/README.md) for a full list.
    - `conda` packages:
      
      Package | Version | use
      ----|----|-----------
      `notebook` | `6.1.3` | Main notebook application.
      `ipython` | *Python version-dependent*<sup>1</sup> | Interactive IPython shell application. Newest version compatible with the container's Python version is installed.
-     `ipywidgets`<sup>2</sup> | `7.5.1` | JavaScript/Python widget functionality for notebooks.
+     `ipywidgets`<sup>2</sup> | `7.5.1` | JavaScript/IPython widget functionality for notebooks.
      `tqdm`<sup>2</sup> | `4.45.0` | Useful progress bar plugin for command line and notebooks.
-     `nbconvert`<sup>2</sup> | `5.6.1` | Export notebooks to various file formats
+     `nbconvert`<sup>2</sup> | `5.6.1` | Exports notebooks to various file formats
      `pandoc`<sup>2</sup> | `2.10` | Enables additional file formats for `nbconvert`
      `tini` | `0.18.0` | Handles signal forwarding and PID reaping to prevent notebook kernel crashes when running executable container
      
-     <sup>1</sup>`python>=3.6`: `7.16.1`<br>`python 
+     <sup>1</sup>`python>=3.6`:`7.16.1`   `python>=3.5,<3.6`:`7.9.0`   `python>=3.3,<3.5`:`6.5.0`   `python<3.3`:`5.8.0`
      
+     <sup>2</sup>Not installed for `python<3.6`
+      
      _Note: dependencies installed by each package are not listed_
