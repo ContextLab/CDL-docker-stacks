@@ -4,5 +4,6 @@
 # PyCharm configs
 .idea*
 
-# ignoring GitHub workflows until finished
+# ignoring GitHub workflows and CI scripts until finished
 .github
+CI-scipts
