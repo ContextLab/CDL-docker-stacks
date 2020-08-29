@@ -3,3 +3,6 @@
 
 # PyCharm configs
 .idea*
+
+# ignoring GitHub workflows until finished
+.github
