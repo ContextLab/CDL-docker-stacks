@@ -19,8 +19,7 @@ ENV NOTEBOOK_PORT $PORT
 
 # reduce layers by combining a bunch of conditional steps:
 #   - install additional apt packages
-#   - update Python version
-#   - update pip
+#   - upgrade/downgrade pip
 #   - install additional Python packages
 # with definite steps:
 #   - ensure setuptools is up to date
@@ -54,7 +53,7 @@ RUN echo "Building with Python $PYTHON_VERSION" \
     && if (( $(echo "$PY_MAJ_MIN >= 3.6" | bc -l) )); then \
            conda install -Sy \
                ipywidgets=7.5.1 \
-               tqdm=4.45.0 \
+               tqdm=4.47.0 \
                pandoc=2.10 \
                nbconvert=5.6.1 \
            && jupyter nbextension enable --py widgetsnbextension --user; \
@@ -77,9 +76,6 @@ WORKDIR $WORKDIR
 # (can be overridden for interactive session via args to docker run or docker exec)
 ENTRYPOINT ["tini", "-g", "--"]
 CMD ["jupyter", "notebook"]
-
-# expose port for notebook server
-EXPOSE $PORT
 
 # copy in files as late as possible
 COPY jupyter_notebook_config.py $HOME/.jupyter/

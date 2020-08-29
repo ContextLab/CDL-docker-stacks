@@ -8,7 +8,7 @@ ARG CONDA_PACKAGES=""
 ARG PIP_VERSION=""
 ARG PIP_PACKAGES=""
 ARG WORKDIR="/exp"
-ARG PORT=22362
+ARG MTURK=true
 
 # we want the mountpoint to be the working directory, and psiturk to read from the .psiturkconfig there
 ENV PSITURK_GLOBAL_CONFIG_LOCATION $WORKDIR
@@ -37,9 +37,9 @@ RUN if [ ! -z $APT_PACKAGES ]; then \
     && pip install --no-cache-dir \
         $PIP_PACKAGES \
         psiturk==2.3.8 \
-
-# expose port for PsiTurk to serve experiment
-EXPOSE $PORT
+    && if [ $MTURK = true ]; then \
+           pip install --no-cache-dir pymysql==0.10.0; \
+       fi
 
 # unset command from cdl-python
 CMD []

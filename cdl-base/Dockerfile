@@ -14,13 +14,13 @@ ENV LANG C.UTF-8
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # uncomment line in skeleton .bashrc to enable terminal colors, install basic apt packages
-RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc && \
-    apt-get update --fix-missing && \
-    apt-get install -y --no-install-recommends eatmydata && \
-    eatmydata apt-get install -y --no-install-recommends \
-    mpich \
-    procps \
-    sudo \
-    vim \
-    wget \
- && rm -rf /var/lib/apt/lists/*
+RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashrc \
+    && apt-get update --fix-missing \
+    && apt-get install -y --no-install-recommends eatmydata \
+    && eatmydata apt-get install -y --no-install-recommends \
+        mpich \
+        procps \
+        sudo \
+        vim \
+        wget \
+    && rm -rf /var/lib/apt/lists/*
