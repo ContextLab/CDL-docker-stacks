@@ -40,6 +40,7 @@ RUN echo "Building with Python $PYTHON_VERSION" \
     && conda update -S setupools \
     && conda install -Sy \
         gcc \
+        datalad=0.13.3 \
         nibabel=3.1.1 \
         nilearn=0.6.2 \
         brainiak=0.7.1 \
