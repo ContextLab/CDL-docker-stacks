@@ -23,6 +23,12 @@ class Image:
         # version. Some images only get built for specific Python versions
         self.python_compat = True
 
+    def __repr__(self):
+        return self.name
+
+    def __str__(self):
+        return repr(self)
+
     def _parse_parent_from_dockerfile(self):
         def _value_from_arg(var, _dockerfile):
             var_name = var.lstrip('$')
@@ -105,7 +111,4 @@ class ImageTree:
 
         parent.add_child(child)
         child.add_parent(parent)
-
-
-
 
