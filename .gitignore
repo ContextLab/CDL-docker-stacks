@@ -4,6 +4,12 @@
 # PyCharm configs
 .idea*
 
-# ignoring GitHub workflows and CI scripts until finished
+# Python bytecode
+*__pycache__
+
+# notebook files and checkpoints
+*.ipynb
+*.ipynb_checkpoints
+
+# ignoring GitHub workflows until finished
 .github
-CI-scipts
