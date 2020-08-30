@@ -3,3 +3,13 @@
 
 # PyCharm configs
 .idea*
+
+# Python bytecode
+*__pycache__
+
+# notebook files and checkpoints
+*.ipynb
+*.ipynb_checkpoints
+
+# ignoring GitHub workflows until finished
+.github
