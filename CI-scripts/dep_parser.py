@@ -121,8 +121,11 @@ class ImageTree:
         return {child: self.get_structure(child)
                 for child in root_image.children}
 
-    def render(self, root_image=None):
-        if root_image is None:
-            root_image = self.root_image
+    def determine_rebuilds(self, edited_dockerfiles):
+        pass
 
-        structure = self.get_structure(root_image=root_image)
+    # def render(self, root_image=None):
+    #     if root_image is None:
+    #         root_image = self.root_image
+    #
+    #     structure = self.get_structure(root_image=root_image)
