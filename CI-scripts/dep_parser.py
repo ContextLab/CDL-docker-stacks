@@ -112,3 +112,17 @@ class ImageTree:
         parent.add_child(child)
         child.add_parent(parent)
 
+    def get_structure(self, root_image=None):
+        if root_image is None:
+            root_image = self.root_image
+        elif not isinstance(root_image, Image):
+            root_image = self.images[root_image]
+
+        return {child: self.get_structure(child)
+                for child in root_image.children}
+
+    def render(self, root_image=None):
+        if root_image is None:
+            root_image = self.root_image
+
+        structure = self.get_structure(root_image=root_image)
