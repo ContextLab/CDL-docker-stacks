@@ -64,7 +64,12 @@ class Image:
 
     @property
     def dependencies(self):
-        return
+        deps = list()
+        if self.parent is not self.tree.root_image:
+            deps.extend(self.parent.dependencies)
+
+        deps.append(self)
+        return deps
 
     def add_to_tree(self):
         if self.dirpath.is_dir():
