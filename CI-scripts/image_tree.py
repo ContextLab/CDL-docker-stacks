@@ -62,6 +62,10 @@ class Image:
 
         return parent_image
 
+    @property
+    def dependencies(self):
+        return
+
     def add_to_tree(self):
         if self.dirpath.is_dir():
             parent_image = self._parse_parent_from_dockerfile()
