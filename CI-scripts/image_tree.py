@@ -1,6 +1,8 @@
 """
 Based on Dockerfiles changed in a commit or PR, determines what
-dependent images need to be rebuilt
+images need to be rebuilt.
+Returns a list of image names (directories), sorted hierarchically so
+that the builds happen in the correct order.
 """
 
 import sys
@@ -24,13 +26,14 @@ class Image:
         self.python_compat = True
 
     def __repr__(self):
-        return self.name
+        return f"Image({self.name})"
 
     def __str__(self):
-        return repr(self)
+        return self.name
 
     def _parse_parent_from_dockerfile(self):
         def _value_from_arg(var, _dockerfile):
+            # handles instance where base image can bet set via a build-arg
             var_name = var.lstrip('$')
             declaration = f'ARG {var_name}='
             arg_line = next(l for l in _dockerfile if l.startswith(declaration))
@@ -63,13 +66,21 @@ class Image:
         return parent_image
 
     @property
-    def dependencies(self):
-        deps = list()
+    def ancestors(self):
+        ancs = list()
         if self.parent is not self.tree.root_image:
-            deps.extend(self.parent.dependencies)
+            ancs.extend(self.parent.ancestors)
 
-        deps.append(self)
-        return deps
+        ancs.append(self)
+        return ancs
+
+    @property
+    def descendants(self):
+        descs = list()
+        for child in self.children:
+            descs.extend(child.descendants)
+
+        return [self] + descs
 
     def add_to_tree(self):
         if self.dirpath.is_dir():
@@ -103,6 +114,23 @@ class ImageTree:
             image = self.get_image(image_name)
             image.add_to_tree()
 
+    def determine_rebuilds(self, edited_names):
+        dependent_imgs = list()
+        for name in edited_names:
+            try:
+                image = self.images[name]
+            except KeyError as e:
+                raise ValueError(f"Couldn't find an image named \"{name}\" "
+                                 f"in:\n{', '.join(self.images.keys())}") from e
+
+            dependent_imgs.extend(image.descendants)
+
+        images_unique = list(set(dependent_imgs))
+        # sort by number of intermediate parents between image and root_image
+        images_sorted = sorted(images_unique, key=lambda img: len(img.ancestors))
+        to_rebuild = [img for img in images_sorted if img.python_compat]
+        return to_rebuild
+
     def get_image(self, image_name):
         try:
             return self.images[image_name]
@@ -121,20 +149,19 @@ class ImageTree:
         parent.add_child(child)
         child.add_parent(parent)
 
-    def get_structure(self, root_image=None):
-        if root_image is None:
-            root_image = self.root_image
-        elif not isinstance(root_image, Image):
-            root_image = self.images[root_image]
-
-        return {child: self.get_structure(child)
-                for child in root_image.children}
-
-    def determine_rebuilds(self, edited_dockerfiles):
-        pass
+    # def get_structure(self, root_image=None):
+    #     if root_image is None:
+    #         root_image = self.root_image
+    #     elif not isinstance(root_image, Image):
+    #         root_image = self.images[root_image]
+    #
+    #     return {child: self.get_structure(child)
+    #             for child in root_image.children}
 
     # def render(self, root_image=None):
     #     if root_image is None:
     #         root_image = self.root_image
     #
     #     structure = self.get_structure(root_image=root_image)
+
+
