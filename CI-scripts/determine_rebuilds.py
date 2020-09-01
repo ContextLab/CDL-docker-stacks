@@ -32,8 +32,8 @@ def determine_rebuilds(tree, edited_names):
 
 
 def main():
-    repo_path = Path(getenv("GITHUB_WORKSPACE"))
-    data_dir = Path(getenv("DATA_DIR"))
+    repo_path = Path(getenv("GITHUB_WORKSPACE"))    # repo_path = Path(__file__).resolve().parents[1]
+    data_dir = Path(getenv("DATA_DIR"))    # data_dir = Path(__file__).resolve().parents[1].joinpath('data')
     diff_tree_paths = sys.argv[1]
     updated_images = [path.replace('/Dockerfile', '')
                       for path in diff_tree_paths.splitlines()]
