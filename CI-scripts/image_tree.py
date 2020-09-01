@@ -1,17 +1,10 @@
 """
-Based on Dockerfiles changed in a commit or PR, determines what
-images need to be rebuilt.
-Returns a list of image names (directories), sorted hierarchically so
-that the builds happen in the correct order.
+Implements a fairly simple m-ary tree of image dependencies
 """
 
-import sys
+
 from os import getenv
 from pathlib import Path
-
-
-REPO_PATH = Path(__file__).resolve().parents[1]
-IMAGE_PYTHON_VERSION = 3.6 #getenv("IMAGE_PYTHON")
 
 
 class Image:
@@ -20,7 +13,7 @@ class Image:
         self.tree = tree
         self.parent = None
         self.children = list()
-        self.dirpath = REPO_PATH.joinpath(self.name)
+        self.dirpath = self.tree.root_dir.joinpath(self.name)
         # CI builds run in parallel as job matrix, divided by Python
         # version. Some images only get built for specific Python versions
         self.python_compat = True
@@ -56,7 +49,7 @@ class Image:
         if (
                 parent_tag is not None and
                 parent_tag[0].isdigit() and
-                parent_tag != IMAGE_PYTHON_VERSION
+                parent_tag != self.tree.python_version
         ):
             # if the image's parent is tagged with a pinned Python
             # version, the image should only be built for that entry in
@@ -103,6 +96,7 @@ class ImageTree:
         self.root_dir = Path(root_dir)
         self.images = dict()
         self.root_image = None
+        self.python_version = getenv("IMAGE_PYTHON")
 
         self._create_tree()
 
@@ -113,23 +107,6 @@ class ImageTree:
             image_name = df_path.parent.name
             image = self.get_image(image_name)
             image.add_to_tree()
-
-    def determine_rebuilds(self, edited_names):
-        dependent_imgs = list()
-        for name in edited_names:
-            try:
-                image = self.images[name]
-            except KeyError as e:
-                raise ValueError(f"Couldn't find an image named \"{name}\" "
-                                 f"in:\n{', '.join(self.images.keys())}") from e
-
-            dependent_imgs.extend(image.descendants)
-
-        images_unique = list(set(dependent_imgs))
-        # sort by number of intermediate parents between image and root_image
-        images_sorted = sorted(images_unique, key=lambda img: len(img.ancestors))
-        to_rebuild = [img for img in images_sorted if img.python_compat]
-        return to_rebuild
 
     def get_image(self, image_name):
         try:
@@ -163,5 +140,3 @@ class ImageTree:
     #         root_image = self.root_image
     #
     #     structure = self.get_structure(root_image=root_image)
-
-
