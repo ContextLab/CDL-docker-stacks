@@ -75,4 +75,5 @@ RUN echo "Building with Python $PYTHON_VERSION" \
     && pip install --no-cache-dir \
            git+https://github.com/ContextLab/hypertools.git@dea0df127b150c39ed9a7b1faaa8fbde089ee834 \
            quail==0.2.0 \
+           fastdtw==0.3.4 \
            $PIP_PACKAGES
