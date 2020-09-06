@@ -24,6 +24,23 @@ class Image:
     def __str__(self):
         return self.name
 
+    @property
+    def ancestors(self):
+        ancs = list()
+        if self.parent is not self.tree.root_image:
+            ancs.extend(self.parent.ancestors)
+
+        ancs.append(self)
+        return ancs
+
+    @property
+    def descendants(self):
+        descs = list()
+        for child in self.children:
+            descs.extend(child.descendants)
+
+        return [self] + descs
+
     def _parse_parent_from_dockerfile(self):
         def _value_from_arg(var, _dockerfile):
             # handles instance where base image can bet set via a build-arg
@@ -57,23 +74,6 @@ class Image:
             self.python_compat = False
 
         return parent_image
-
-    @property
-    def ancestors(self):
-        ancs = list()
-        if self.parent is not self.tree.root_image:
-            ancs.extend(self.parent.ancestors)
-
-        ancs.append(self)
-        return ancs
-
-    @property
-    def descendants(self):
-        descs = list()
-        for child in self.children:
-            descs.extend(child.descendants)
-
-        return [self] + descs
 
     def add_to_tree(self):
         if self.dirpath.is_dir():
@@ -122,6 +122,9 @@ class ImageTree:
             parent = self.get_image(parent)
         if not isinstance(child, Image):
             child = self.get_image(child)
+
+        if not parent.python_compat:
+            child.python_compat = False
 
         parent.add_child(child)
         child.add_parent(parent)
