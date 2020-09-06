@@ -44,7 +44,7 @@ RUN echo "Building with Python $PYTHON_VERSION" \
         nltk=3.5 \
         numba=0.50.1 \
         numexpr=2.7.1 \
-        numpy=1.18.5 \
+        numpy=1.19.1 \
         openpyxl=3.0.4 \
         pandas=1.0.5 \
         pandas-profiling=1.4.1 \
