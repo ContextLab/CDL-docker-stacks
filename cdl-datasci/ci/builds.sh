@@ -1,7 +1,7 @@
 # functions for building various versions of image
 
 build_default() {
-    image_dir="$GITHUB_WORKSPACE/cdl-datasci"
+    local image_dir="$GITHUB_WORKSPACE/cdl-datasci"
     docker build --rm --force-rm \
         -f "$image_dir/Dockerfile" \
         -t contextlab/cdl-datasci:"$IMAGE_PYTHON" \
