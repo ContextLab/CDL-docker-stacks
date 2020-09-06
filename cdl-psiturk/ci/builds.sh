@@ -5,6 +5,6 @@ build_default() {
     local image_dir="$GITHUB_WORKSPACE/cdl-psiturk"
     docker build --rm --force-rm \
         -f "$image_dir/Dockerfile" \
-        -t contextlab/cdl-psiturk:"$IMAGE_PYTHON" \
+        -t "$DOCKER_HUB_ORG/cdl-psiturk:$IMAGE_PYTHON" \
         "$image_dir"
 }

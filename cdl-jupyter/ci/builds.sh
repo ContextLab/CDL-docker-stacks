@@ -4,7 +4,7 @@ build_default() {
     local image_dir="$GITHUB_WORKSPACE/cdl-jupyter"
     docker build --rm --force-rm \
         -f "$image_dir/Dockerfile" \
-        -t contextlab/cdl-jupyter:"$IMAGE_PYTHON" \
+        -t "$DOCKER_HUB_ORG/cdl-jupyter:$IMAGE_PYTHON" \
         --build-arg PYTHON_VERSION="$IMAGE_PYTHON" \
         "$image_dir"
 }
