@@ -96,7 +96,7 @@ class ImageTree:
         self.root_dir = Path(root_dir)
         self.images = dict()
         self.root_image = None
-        self.python_version = getenv("IMAGE_PYTHON")
+        self.python_version = getenv("PYTHON_VERSION")
 
         self._create_tree()
 
