@@ -1,8 +1,6 @@
 """
-Implements a fairly simple m-ary tree of image dependencies
+Implements a simple m-ary tree of image dependencies
 """
-
-
 from os import getenv
 from pathlib import Path
 
@@ -105,23 +103,44 @@ class ImageTree:
         dockerfile_paths = list(dockerfile_paths)
         for df_path in dockerfile_paths:
             image_name = df_path.parent.name
-            image = self.get_image(image_name)
+            image = self.get_image(image_name, create_new=True)
             image.add_to_tree()
 
-    def get_image(self, image_name):
+    def create_image(self, image_name):
+        image = Image(image_name, tree=self)
+        image.add_to_tree()
+        self.images[image_name] = image
+        return image
+
+    def determine_rebuilds(self, edited_img_names):
+        dependent_imgs = list()
+        for img_name in edited_img_names:
+            # image must exist at this point, or raise error
+            image = self.get_image(img_name, create_new=False)
+            dependent_imgs.extend(image.descendants)
+
+        unique_dependents = list(set(dependent_imgs))
+        # sort by number of intermediate parents between image and self.root_image
+        sorted_dependents = sorted(unique_dependents, key=lambda img: len(img.ancestors))
+        # filter out images not compatible with current CI build's Python version
+        to_rebuild = [img.name for img in sorted_dependents if img.python_compat]
+        return to_rebuild
+
+    def get_image(self, image_name, create_new=False):
         try:
             return self.images[image_name]
-        except KeyError:
-            image = Image(image_name, tree=self)
-            image.add_to_tree()
-            self.images[image_name] = image
-            return image
+        except KeyError as e:
+            if create_new:
+                return self.create_image(image_name)
+            else:
+                raise ValueError(f"No Image named {image_name} "
+                                 f"in:{', '.join(self.images.keys())}") from e
 
     def link_images(self, parent, child):
         if not isinstance(parent, Image):
-            parent = self.get_image(parent)
+            parent = self.get_image(parent, create_new=True)
         if not isinstance(child, Image):
-            child = self.get_image(child)
+            child = self.get_image(child, create_new=True)
 
         if not parent.python_compat:
             child.python_compat = False
