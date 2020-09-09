@@ -8,7 +8,7 @@ ARG CONDA_PACKAGES=""
 ARG PIP_VERSION=""
 ARG PIP_PACKAGES=""
 ARG WORKDIR="/exp"
-ARG MTURK=true
+ARG MTURK=false
 
 # we want the mountpoint to be the working directory, and psiturk to read from the .psiturkconfig there
 ENV PSITURK_GLOBAL_CONFIG_LOCATION $WORKDIR
