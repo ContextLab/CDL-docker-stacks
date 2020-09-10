@@ -1,6 +1,8 @@
 from os import getenv
 from pathlib import Path
 
+from docker.errors import NotFound
+
 
 class Container:
     def __init__(self, image):
@@ -68,6 +70,7 @@ class Container:
             command,
             shell='/bin/bash',
             detach=True,
+            remove=False,
             tty=True,
             max_wait=30,
             workdir=None,
@@ -103,11 +106,33 @@ class Container:
                                                command=cmd,
                                                name=self.curr_container_name,
                                                detach=detach,
+                                               remove=remove,
                                                tty=tty,
                                                working_dir=workdir,
                                                volumes=volumes,
                                                ports=ports,
                                                **kwargs)
-        container.wait(timeout=max_wait)
-        self.curr_container_obj = container
+        if detach:
+            # if detach is True, returns a docker.containers.Container instance
+            try:
+                container.wait(timeout=max_wait)
+            except NotFound:
+                if remove:
+                    pass
+                else:
+                    raise
+            except ConnectionError as e:
+                raise TimeoutError(
+                    f"Command {' '.join(cmd)} during test function "
+                    f"\"{self.curr_container_name.replace('_container', '')}\" "
+                    f"timed out after {max_wait} seconds"
+                ) from e
+
+            if not remove:
+                self.curr_container_obj = container
+
+        else:
+            # if detach is False, returns a bytes string of command's stdout
+            container = container.decode('utf-8').strip()
+
         return container
