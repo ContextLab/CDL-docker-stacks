@@ -75,13 +75,15 @@ class Container:
     def run(self,
             command,
             shell='/bin/bash',
+            detach=True,
+            tty=True,
+            max_wait=30,
             workdir=None,
             mountpoint_container=None,
             mountpoint_local=None,
             volume_mode='rw',
             port_container=None,
             port_local=None,
-            name=None,
             **kwargs):
         if isinstance(command, str):
             command = [command]
@@ -108,10 +110,13 @@ class Container:
         container = self.client.containers.run(self.image_name_full,
                                                command=cmd,
                                                name=self.curr_container_name,
+                                               detach=detach,
+                                               tty=tty,
                                                working_dir=workdir,
                                                volumes=volumes,
                                                ports=ports,
                                                **kwargs)
+        container.wait(timeout=max_wait)
         self.curr_container_obj = container
         return container
 
@@ -141,7 +146,7 @@ def manage_containers(request, container):
 
     # remove container created for test
     if container.running_container is not None:
-        if container.running_container.status == 'running':
+        if container.running_container.status != 'exited':
             container.running_container.stop()
 
         container.running_container.remove()
