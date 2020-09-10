@@ -19,9 +19,9 @@ class Container:
         # collect expected image/container attributes for testing
         self.expected_attrs = self._get_expected_attrs()
 
-        # used by the manage_containers fixture to set container name based on
-        # the currently running test function and remove all containers once
-        # the test finishes
+        # used by the manage_containers fixture to set container name
+        # based on the currently running test function and remove all
+        # containers once the test finishes
         self.curr_container_name = None
         self.curr_container_obj = None
 
@@ -74,9 +74,11 @@ class Container:
             tty=True,
             max_wait=30,
             workdir=None,
+            mount=False,
             mountpoint_container=None,
             mountpoint_local=None,
             volume_mode='rw',
+            publish_port=False,
             port_container=None,
             port_local=None,
             **kwargs):
@@ -84,22 +86,34 @@ class Container:
             command = [command]
         if workdir is None:
             workdir = self.expected_attrs.get('workdir')
-        if mountpoint_container is None:
-            mountpoint_container = self.expected_attrs.get('workdir', '/mnt')
-        if mountpoint_local is None:
-            mountpoint_local = self.default_mountpoint
-        if port_container is None:
-            port_container = self.expected_attrs.get('port', '8888')
-        if port_local is None:
-            port_local = port_container
+        if mountpoint_container is not None or mountpoint_local is not None:
+            mount = True
+        if port_container is not None or port_local is not None:
+            publish_port = True
 
-        volumes = {
-            mountpoint_local: {
-                'bind': mountpoint_container,
-                'mode': volume_mode
+        if mount:
+            if mountpoint_container is None:
+                mountpoint_container = self.expected_attrs.get('workdir', '/mnt')
+            if mountpoint_local is None:
+                mountpoint_local = self.default_mountpoint
+            volumes = {
+                mountpoint_local: {
+                    'bind': mountpoint_container,
+                    'mode': volume_mode
+                }
             }
-        }
-        ports = {port_container: port_local}
+        else:
+            volumes = None
+
+        if publish_port:
+            if port_container is None:
+                port_container = self.expected_attrs.get('port', '8888')
+            if port_local is None:
+                port_local = port_container
+            ports = {port_container: port_local}
+        else:
+            ports = None
+            
         cmd = [shell, '-c']
         cmd.extend(command)
         container = self.client.containers.run(self.image_name_full,
@@ -113,15 +127,20 @@ class Container:
                                                ports=ports,
                                                **kwargs)
         if detach:
-            # if detach is True, returns a docker.containers.Container instance
+            # if detach is True, returns a docker.containers.Container
+            # instance
             try:
                 container.wait(timeout=max_wait)
             except NotFound:
+                # unlikely to happen, but would be raised if remove is
+                # True and container was removed before container.wait()
+                # was called
                 if remove:
                     pass
                 else:
                     raise
             except ConnectionError as e:
+                # command didn't finish running in max_wait seconds
                 raise TimeoutError(
                     f"Command {' '.join(cmd)} during test function "
                     f"\"{self.curr_container_name.replace('_container', '')}\" "
@@ -129,10 +148,14 @@ class Container:
                 ) from e
 
             if not remove:
+                # if container isn't removed here (so it can be used
+                # later in same test function), this causes it to be
+                # removed by the manage_containers fixture after the
+                # test function returns
                 self.curr_container_obj = container
-
         else:
-            # if detach is False, returns a bytes string of command's stdout
+            # if detach is False, decode the bytes string of command's
+            # stdout before returning for convenience
             container = container.decode('utf-8').strip()
 
         return container
