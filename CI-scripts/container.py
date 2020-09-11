@@ -67,7 +67,7 @@ class Container:
         return expected_attrs
 
     def run(self,
-            command,
+            command=None,
             shell='/bin/bash',
             detach=True,
             remove=False,
@@ -82,8 +82,6 @@ class Container:
             port_container=None,
             port_local=None,
             **kwargs):
-        if isinstance(command, str):
-            command = [command]
         if workdir is None:
             workdir = self.expected_attrs.get('workdir')
         if mountpoint_container is not None or mountpoint_local is not None:
@@ -113,9 +111,15 @@ class Container:
             ports = {port_container: port_local}
         else:
             ports = None
+
+        if command is not None:
+            if isinstance(command, str):
+                command = [command]
+            cmd = [shell, '-c']
+            cmd.extend(command)
+        else:
+            cmd = None
             
-        cmd = [shell, '-c']
-        cmd.extend(command)
         container = self.client.containers.run(self.image_name_full,
                                                command=cmd,
                                                name=self.curr_container_name,
