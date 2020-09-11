@@ -24,4 +24,5 @@ RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /etc/skel/.bashr
         sudo \
         vim \
         wget \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*

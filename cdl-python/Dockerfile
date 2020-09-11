@@ -17,37 +17,38 @@ ENV CONDA_PINNED /opt/conda/conda-meta/pinned
 COPY pin_conda_package_version.sh /etc/profile.d/
 
 # Install miniconda & any additional apt packages
-RUN if [ ! -z $APT_PACKAGES ]; then \
+RUN if [ -n "$APT_PACKAGES" ]; then \
         apt-get update --fix-missing \
         && eatmydata apt-get install -y --no-install-recommends $APT_PACKAGES \
+        && apt-get clean \
         && rm -rf /var/lib/apt/lists/*; \
     fi \
     && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py38_4.8.3-Linux-x86_64.sh -O ~/miniconda.sh \
     && /bin/bash ~/miniconda.sh -b -p /opt/conda \
     && rm ~/miniconda.sh \
     && conda config --set auto_update_conda false \
-    && conda config --append channels conda-forge \
+    && conda config --prepend channels conda-forge \
     && conda config --set channel_priority strict \
     && conda config --set show_channel_urls true \
-    && if [ ! $PYTHON_VERSION = 3.8 ]; then \
+    && if [ ! "$PYTHON_VERSION" = 3.8 ]; then \
            echo "installing Python=${PYTHON_VERSION}" \
            && conda install -y python=$PYTHON_VERSION; \
        fi \
     && conda install -Sy \
-           "conda=4.8.*" \
-           "setuptools=49.*" \
-           "pip=20.*" \
-    && if [ ! -z $CONDA_PACKAGES ]; then \
+           conda=4.8.4 \
+           setuptools=49.6.0 \
+           pip=20.0.2 \
+    && if [ -n "$CONDA_PACKAGES" ]; then \
            conda install -y $CONDA_PACKAGES \
-           && conda clean --all -f -y; \
+           && conda clean --all -f -y \
        fi \
-    && if [ ! -z $PIP_VERSION ]; then \
+    && if [ -n "$PIP_VERSION" ]; then \
            conda install -Sy pip=$PIP_VERSION \
-           && conda clean --all -f -y; \
        fi \
-    && if [ ! -z $PIP_PACKAGES ]; then \
-           pip install --no-cache-dir $PIP_PACKAGES; \
+    && if [ -n "$PIP_PACKAGES" ]; then \
+           pip install --no-cache-dir $PIP_PACKAGES \
        fi \
+    && conda clean --all -f -y \
     && source /etc/profile.d/pin_conda_package_version.sh \
     && pin_package python minor \
     && pin_package conda minor \
