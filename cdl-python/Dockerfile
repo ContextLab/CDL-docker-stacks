@@ -27,6 +27,7 @@ RUN if [ -n "$APT_PACKAGES" ]; then \
     && /bin/bash ~/miniconda.sh -b -p /opt/conda \
     && rm ~/miniconda.sh \
     && conda config --set auto_update_conda false \
+    && conda config --set notify_outdated_conda false \
     && conda config --prepend channels conda-forge \
     && conda config --set channel_priority strict \
     && conda config --set show_channel_urls true \
@@ -40,13 +41,13 @@ RUN if [ -n "$APT_PACKAGES" ]; then \
            pip=20.0.2 \
     && if [ -n "$CONDA_PACKAGES" ]; then \
            conda install -y $CONDA_PACKAGES \
-           && conda clean --all -f -y \
+           && conda clean --all -f -y; \
        fi \
     && if [ -n "$PIP_VERSION" ]; then \
-           conda install -Sy pip=$PIP_VERSION \
+           conda install -Sy pip=$PIP_VERSION; \
        fi \
     && if [ -n "$PIP_PACKAGES" ]; then \
-           pip install --no-cache-dir $PIP_PACKAGES \
+           pip install --no-cache-dir $PIP_PACKAGES; \
        fi \
     && conda clean --all -f -y \
     && source /etc/profile.d/pin_conda_package_version.sh \
