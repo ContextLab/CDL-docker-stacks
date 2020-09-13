@@ -28,6 +28,12 @@ def container():
     yield container
 
 
+@pytest.fixture(scope='session')
+def conda_env(container):
+    environment = CondaEnvironment(container)
+    yield environment
+
+
 @pytest.fixture(scope='function', autouse=True)
 def manage_containers(request, container):
     # set container name based on test function name for tracking
@@ -35,14 +41,15 @@ def manage_containers(request, container):
     container.curr_container_name = f'{test_func_name}_container'
     yield
 
-    # remove container created for test
+    # remove container created during test function if:
+    # A) one was created at all, and
+    # B) it was run with remove=False
     if container.running_container is not None:
         if container.running_container.status != 'exited':
             container.running_container.stop()
 
         container.running_container.remove()
         container.running_container = None
-
 
 
 def pytest_configure(config):
