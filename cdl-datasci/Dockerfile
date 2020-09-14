@@ -29,11 +29,11 @@ WORKDIR $WORKDIR
 #   - ensure setuptools is up to date
 #   - install various common data science-related packages
 RUN echo "Building with Python $PYTHON_VERSION" \
-    && if [ ! -z $APT_PACKAGES ]; then \
-           apt-get update --fix-missing \
-           && eatmydata apt-get install -y --no-install-recommends $APT_PACKAGES \
-           && rm -rf /var/lib/apt/lists/*; \
-       fi \
+    && apt-get update --fix-missing \
+    && eatmydata apt-get install -y --no-install-recommends \
+        git \
+        $APT_PACKAGES \
+    && rm -rf /var/lib/apt/lists/* \
     && conda update -S setupools \
     && conda install -Sy \
         beautifulsoup4=4.9.1 \
@@ -44,7 +44,7 @@ RUN echo "Building with Python $PYTHON_VERSION" \
         nltk=3.5 \
         numba=0.50.1 \
         numexpr=2.7.1 \
-        numpy=1.18.5 \
+        numpy=1.19.1 \
         openpyxl=3.0.4 \
         pandas=1.0.5 \
         pandas-profiling=1.4.1 \
@@ -75,4 +75,5 @@ RUN echo "Building with Python $PYTHON_VERSION" \
     && pip install --no-cache-dir \
            git+https://github.com/ContextLab/hypertools.git@dea0df127b150c39ed9a7b1faaa8fbde089ee834 \
            quail==0.2.0 \
+           fastdtw==0.3.4 \
            $PIP_PACKAGES

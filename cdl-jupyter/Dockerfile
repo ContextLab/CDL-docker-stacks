@@ -22,10 +22,9 @@ ENV NOTEBOOK_PORT $PORT
 #   - upgrade/downgrade pip
 #   - install additional Python packages
 # with definite steps:
-#   - ensure setuptools is up to date
 #   - install Tini for running container as executable
 #   - install IPython, Jupyter notebook, and some other basic packages
-#   - turn of Jedi autocomplete (evaluates code on TAB)
+#   - turn off Jedi autocomplete (evaluates code on TAB)
 #   - install & enable some handy notebook extensions
 RUN echo "Building with Python $PYTHON_VERSION" \
     && apt-get update --fix-missing \
@@ -33,8 +32,8 @@ RUN echo "Building with Python $PYTHON_VERSION" \
         bc \
         bzip2 \
         $APT_PACKAGES \
-    && rm -rf /var/lib/apt/lists/* \
-    && conda update -S setuptools \
+    && apt-get clean \
+    && rm -rf "/var/lib/apt/lists/*" \
     && PY_MAJ_MIN="$(python -V | grep -Po '(?<=Python )([^.]*\.[^.]*)')" \
     && if (( $(echo "$PY_MAJ_MIN < 3.3" | bc -l) )); then \
            IPYTHON_VERSION=5.8.0; \
@@ -47,27 +46,38 @@ RUN echo "Building with Python $PYTHON_VERSION" \
        fi \
     && conda install -Sy \
         tini=0.18.0 \
-        notebook=6.1.3 \
+        notebook=6.1.4 \
         ipython=$IPYTHON_VERSION \
         $CONDA_PACKAGES \
+    && source /etc/profile.d/pin_conda_package_version.sh \
+    && pin_package tini minor \
+    && pin_package jupyter minor \
+    && pin_package notebook minor \
+    && pin_package ipython minor \
     && if (( $(echo "$PY_MAJ_MIN >= 3.6" | bc -l) )); then \
            conda install -Sy \
                ipywidgets=7.5.1 \
-               tqdm=4.47.0 \
-               pandoc=2.10 \
+               jupyter_contrib_nbextensions=0.5.1 \
                nbconvert=5.6.1 \
-           && jupyter nbextension enable --py widgetsnbextension --user; \
+               pandoc=2.10 \
+           && pin_package jupyter-contrib minor \
+           && pin_package nbconvert minor \
+           && jupyter nbextension enable --py widgetsnbextension --sys-prefix; \
        fi \
-    && if [ ! -z $PIP_VERSION ]; then \
-           conda install -Sy pip=$PIP_VERSION; \
+    && if [ -n "$PIP_VERSION" ]; then \
+           conda install -Sy pip=$PIP_VERSION \
+           && pin_package pip major; \
        fi \
     && conda clean --all -f -y \
-    && pip install --no-cache-dir \
-        jupyter_contrib_nbextensions==0.5.1 \
-        $PIP_PACKAGES \
+    && if [ -n "$PIP_PACKAGES" ]; then \
+           pip install --no-cache-dir $PIP_PACKAGES; \
+       fi \
     && jupyter notebook --generate-config \
-    && jupyter contrb nbextension install --user \
-    && echo "c = get_config(); c.IPCompleter.use_jedi = False" > ~/.ipython/profile_default/ipython_config.py
+    && ipython profile create \
+    &&  sed -i \
+        -e 's/^# c.Completer.use_jedi = True/c.Completer.use_jedi = False/' \
+        -e 's/^# c.IPCompleter.use_jedi = True/c.IPCompleter.use_jedi = False/' \
+        ~/.ipython/profile_default/ipython_config.py
 
 # set working directory
 WORKDIR $WORKDIR
@@ -78,4 +88,4 @@ ENTRYPOINT ["tini", "-g", "--"]
 CMD ["jupyter", "notebook"]
 
 # copy in files as late as possible
-COPY jupyter_notebook_config.py $HOME/.jupyter/
+COPY jupyter_notebook_config.py /root/.jupyter/
