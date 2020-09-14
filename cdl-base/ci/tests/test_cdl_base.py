@@ -18,7 +18,7 @@ def test_utf8_locale(container):
     assert output == 'C.UTF-8'
 
 
-def test_apt_packages_installed(container):
+def test_base_apt_packages_installed(container):
     for apt_pkg in CDL_BASE_APT_PACKAGES:
         pkg_installed = container.apt_packages.get(apt_pkg)
         assert pkg_installed is not None, f'{apt_pkg} is not installed'
