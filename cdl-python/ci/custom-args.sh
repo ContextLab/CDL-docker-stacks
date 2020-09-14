@@ -4,7 +4,7 @@
 # build-arg values for CI testing custom image builds #
 #######################################################
 # extra apt packages
-export APT_PACKAGES="curl nano"
+export APT_PACKAGES="curl nano git"
 # extra version-pinned conda packages
 export CONDA_PACKAGES="numpy=1.19.1 requests=2.24.0"
 # older but recent pip version
