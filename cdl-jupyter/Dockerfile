@@ -24,7 +24,7 @@ ENV NOTEBOOK_PORT $PORT
 # with definite steps:
 #   - install Tini for running container as executable
 #   - install IPython, Jupyter notebook, and some other basic packages
-#   - turn of Jedi autocomplete (evaluates code on TAB)
+#   - turn off Jedi autocomplete (evaluates code on TAB)
 #   - install & enable some handy notebook extensions
 RUN echo "Building with Python $PYTHON_VERSION" \
     && apt-get update --fix-missing \
