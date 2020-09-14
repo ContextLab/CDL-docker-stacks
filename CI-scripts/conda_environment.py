@@ -1,5 +1,4 @@
 import json
-from itertools import zip_longest
 
 
 class CondaEnvironment:
@@ -53,13 +52,20 @@ class Package:
         else:
             self.delimiter = '='
 
-        name, version = pkg_spec.split(self.delimiter)
+        name_version = pkg_spec.split(self.delimiter)
+        name = name_version[0]
+        if len(name_version) == 1:
+            version = '*'
+        elif len(name_version) == 2:
+            version = name_version[1]
+        elif len(name_version) > 2:
+            raise ValueError(f"Received unepected package spec format: {pkg_spec}")
+
         self.name = name
         self.major_version = None
         self.minor_version = None
         self.patch_version = None
         self.extra_labels = None
-
         self._parse_version(version)
 
     def __repr__(self):
@@ -68,13 +74,6 @@ class Package:
 
     def __str__(self):
         return f'{self.name}{self.delimiter}{self.version}'
-
-    @property
-    def requested(self):
-        if self.installer == 'pip':
-            raise AttributeError("can't discern whether pip-installed packages "
-                                 "were explicitly requested")
-        return self._requested
 
     @property
     def version(self):
@@ -111,9 +110,13 @@ class Package:
                 self.patch_version = patch_version
 
     def matches_version(self, other):
-        assert isinstance(other, Package)
+        if isinstance(other, Package):
+            other_version = other.version
+        else:
+            other_version = other
+
         self_parts = self.version.split('.')
-        other_parts = other.version.split('.')
+        other_parts = other_version.split('.')
         for self_part, other_part in zip(self_parts, other_parts):
             if self_part == '*' or other_part == '*':
                 return True
@@ -121,8 +124,6 @@ class Package:
                 return False
 
         return True
-
-
 
 
 class Permadict(dict):
