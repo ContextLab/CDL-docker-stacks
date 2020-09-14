@@ -29,11 +29,11 @@ WORKDIR $WORKDIR
 #   - ensure setuptools is up to date
 #   - install various common data science-related packages
 RUN echo "Building with Python $PYTHON_VERSION" \
-    && if [ ! -z $APT_PACKAGES ]; then \
-           apt-get update --fix-missing \
-           && eatmydata apt-get install -y --no-install-recommends $APT_PACKAGES \
-           && rm -rf /var/lib/apt/lists/*; \
-       fi \
+    && apt-get update --fix-missing \
+    && eatmydata apt-get install -y --no-install-recommends \
+        git \
+        $APT_PACKAGES \
+    && rm -rf /var/lib/apt/lists/* \
     && conda update -S setupools \
     && conda install -Sy \
         beautifulsoup4=4.9.1 \
