@@ -42,6 +42,11 @@ def test_correct_workdir_set(container):
     assert actual_workdir == expected_workdir
 
 
+def test_pin_package_script_in_profile(container):
+    output = container.run('ls --almost-all', detach=False, remove=True)
+    assert 'pin_conda_package_version.sh' in output
+
+
 @pytest.mark.no_inherit_test
 def test_python_default_cmd(container):
     c = container.run(shell=None)
@@ -83,12 +88,17 @@ def test_strict_channel_priority(conda_env):
 def test_conda_cache_cleaned(container, conda_env):
     pkgs_dirs = conda_env.config.get('pkgs_dirs')
     for pkg_dir in pkgs_dirs:
-        c = container.run(f'ls {pkg_dir}', remove=False)
+        c = container.run(f'ls -a {pkg_dir}', remove=False)
         log = c.logs().decode('utf-8').strip()
         assert 'No such file or directory' in log
         c.remove()
 
 
+def test_pip_cache_removed(container):
+    c = container.run('ls -a ~/.cache/pip', remove=False)
+    log = c.logs().decode('utf-8').strip()
+    assert 'No such file or directory' in log
+    c.remove()
 
 
 # TODO: figure out how to parametrize this with pytest-cases rather than looping
@@ -185,5 +195,3 @@ def test_custom_pip_packages_installed(container, conda_env):
 def test_all_custom_build_args_tested(container):
     # each custom_build_tests pops the attr tested, so none should be left
     assert len(container.expected_attrs) == 0
-
-
