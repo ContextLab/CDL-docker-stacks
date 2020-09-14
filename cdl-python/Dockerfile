@@ -12,7 +12,6 @@ ARG WORKDIR="/mnt"
 
 # add conda executable to path
 ENV PATH /opt/conda/bin:$PATH
-ENV CONDA_PINNED /opt/conda/conda-meta/pinned
 
 COPY pin_conda_package_version.sh /etc/profile.d/
 
