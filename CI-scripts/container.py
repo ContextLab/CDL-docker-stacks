@@ -1,7 +1,8 @@
 from os import getenv
 from pathlib import Path
 
-from docker.errors import NotFound
+import docker
+import requests
 
 
 class Container:
@@ -64,7 +65,8 @@ class Container:
             expected_attrs.update(custom_attrs)
 
         for attr in attrs_ignore:
-            expected_attrs.pop(attr)
+            if attr in expected_attrs.keys():
+                expected_attrs.pop(attr)
 
         empty_attrs = [attr for attr, val in expected_attrs.items() if val == '']
         for attr in empty_attrs:
@@ -154,26 +156,28 @@ class Container:
                                                volumes=volumes,
                                                ports=ports,
                                                **kwargs)
+        # if detach is True, returns a docker.containers.Container instance
         if detach:
-            # if detach is True, returns a docker.containers.Container
-            # instance
-            try:
-                container.wait(timeout=max_wait)
-            except NotFound:
-                # unlikely to happen, but would be raised if remove is
-                # True and container was removed before container.wait()
-                # was called
-                if remove:
-                    pass
-                else:
-                    raise
-            except ConnectionError as e:
-                # command didn't finish running in max_wait seconds
-                raise TimeoutError(
-                    f"Command {' '.join(cmd)} during test function "
-                    f"\"{self.curr_container_name.replace('_container', '')}\" "
-                    f"timed out after {max_wait} seconds"
-                ) from e
+            # set max_wait to -1 to return without waiting
+            # (needed when testing notebook server)
+            if max_wait >= 0:
+                try:
+                    container.wait(timeout=max_wait)
+                except docker.errors.NotFound:
+                    # unlikely to happen, but would be raised if remove is
+                    # True and container was removed before container.wait()
+                    # was called
+                    if remove:
+                        pass
+                    else:
+                        raise
+                except requests.ConnectionError as e:
+                    # command didn't finish running in max_wait seconds
+                    raise TimeoutError(
+                        f"Command {' '.join(cmd)} during test function "
+                        f"\"{self.curr_container_name.replace('_container', '')}\" "
+                        f"timed out after {max_wait} seconds"
+                    ) from e
 
             if not remove:
                 # if container isn't removed here (so it can be used
