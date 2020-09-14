@@ -20,11 +20,13 @@ WORKDIR $WORKDIR
 #   - install specific pip version (if passed)
 #   - install PsiTurk (dependencies for v2.8.3 are pinned well, so we can skip installing them explicitly)
 # done in this order so that pinned Psiturk dependency versions aren't overwritten
-RUN if [ ! -z $APT_PACKAGES ]; then \
-        apt-get update --fix-missing \
-        && eatmydata apt-get install -y --no-install-recommends $APT_PACKAGES \
-        && rm -rf /var/lib/apt/lists/*; \
-    fi \
+RUN apt-get update --fix-missing \
+    && eatmydata apt-get install -y --no-install-recommends \
+        gcc \
+        python3-dev \
+        $APT_PACKAGES \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
     && conda update -S setuptools \
     && if [ ! -z $CONDA_PACKAGES ]; then \
            conda install -Sy $CONDA_PACKAGES \
