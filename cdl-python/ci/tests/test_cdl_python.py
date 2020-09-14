@@ -100,6 +100,9 @@ def test_requested_versions_installed(conda_env):
                 f'match requested version ({requested_pkg}')
 
 
+# TODO: add test to import each module to check if installed properly and working
+
+
 ########################################
 #        CUSTOM BUILD-ARG TESTS        #
 ########################################

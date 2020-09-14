@@ -5,7 +5,6 @@ from pathlib import Path
 import docker
 import pytest
 
-
 sys.path.insert(0, 'CI-scripts')
 from conda_environment import CondaEnvironment
 from container import Container
@@ -51,7 +50,7 @@ def manage_containers(request, container):
 
         try:
             container.running_container.remove()
-        except APIError:
+        except docker.errors.APIError:
             # container was removed in test function body
             pass
 
