@@ -1,30 +1,9 @@
 import pytest
 
 
-CDL_BASE_APT_PACKAGES = [
-    'eatmydata'
-    'ca-certificates',
-    'mpich',
-    'procps',
-    'sudo',
-    'vim',
-    'wget'
-]
-
-
 ########################################
 #            CONTAINER TESTS           #
 ########################################
-# TODO: dynamically add apt packages from other parent Dockerfiles
-def test_apt_packages_installed(container):
-    for apt_pkg in CDL_BASE_APT_PACKAGES:
-        pkg_installed = container.apt_packages.get(apt_pkg)
-        assert pkg_installed is not None, f'{apt_pkg} is not installed'
-        assert (pkg_installed == 'manual',
-                f'{apt_pkg} was installed as a dependency of another package, '
-                'not manually')
-
-
 def test_correct_python_version_installed(container, conda_env):
     expected_version = container.expected_attrs.get('PYTHON_VERSION')
     installed_version = conda_env.installed_packages.get('python')
@@ -49,9 +28,8 @@ def test_pin_package_script_in_profile(container):
 
 @pytest.mark.no_inherit_test
 def test_python_default_cmd(container):
-    c = container.run(shell=None)
+    c = container.run(command=None, shell=None)
     c.stop(timeout=1)
-    c.remove()
     default_cmd = c.attrs.get('Config').get('Cmd')
     assert default_cmd == ['python']
 
@@ -90,15 +68,14 @@ def test_conda_cache_cleaned(container, conda_env):
     for pkg_dir in pkgs_dirs:
         c = container.run(f'ls -a {pkg_dir}', remove=False)
         log = c.logs().decode('utf-8').strip()
-        assert 'No such file or directory' in log
         c.remove()
+        assert 'No such file or directory' in log
 
 
 def test_pip_cache_removed(container):
     c = container.run('ls -a ~/.cache/pip', remove=False)
     log = c.logs().decode('utf-8').strip()
     assert 'No such file or directory' in log
-    c.remove()
 
 
 # TODO: figure out how to parametrize this with pytest-cases rather than looping
