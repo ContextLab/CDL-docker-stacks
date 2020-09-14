@@ -18,6 +18,8 @@ class Container:
         self.image_dir = Path(self.default_mountpoint).joinpath(self.image_name)
         # collect expected image/container attributes for testing
         self.expected_attrs = self._get_expected_attrs()
+        # parse installed apt packages for testing
+        self.apt_packages = self._get_apt_packages()
 
         # used by the manage_containers fixture to set container name
         # based on the currently running test function and remove all
@@ -64,7 +66,29 @@ class Container:
         for attr in attrs_ignore:
             expected_attrs.pop(attr)
 
+        empty_attrs = [attr for attr, val in expected_attrs.items() if val == '']
+        for attr in empty_attrs:
+            expected_attrs.pop(attr)
+
         return expected_attrs
+
+    def _get_apt_packages(self):
+        apt_log = self.run('cat /var/log/apt/history.log',
+                           detach=False,
+                           remove=True)
+        apt_packages = dict()
+        for line in apt_log.splitlines():
+            if line.startswith('Install:'):
+                packages = line.replace('Install: ', '').split('), ')
+                for pkg_spec in packages:
+                    pkg_name = pkg_name.split(':')[0]
+                    if pkg_spec.endswith('automatic'):
+                        install_method = 'automatic'
+                    else:
+                        install_method = 'manual'
+                    apt_packages[pkg_name] = install_method
+
+        return apt_packages
 
     def run(self,
             command=None,
