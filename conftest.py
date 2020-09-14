@@ -51,11 +51,7 @@ def manage_containers(request, container):
 
         try:
             container.running_container.remove()
-<<<<<<< HEAD
         except docker.errors.APIError:
-=======
-        except APIError:
->>>>>>> bd0db91970b4e81a63b206d4ef81f1e9b36ac9ed
             # container was removed in test function body
             pass
 
