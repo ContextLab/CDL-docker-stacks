@@ -52,8 +52,8 @@ RUN if [ -n "$APT_PACKAGES" ]; then \
     && source /etc/profile.d/pin_conda_package_version.sh \
     && pin_package python minor \
     && pin_package conda minor \
-    && pin_package setuptools major \
-    && pin_package pip major
+    && pin_package setuptools major min \
+    && pin_package pip major min
 
 # set working directory
 WORKDIR $WORKDIR

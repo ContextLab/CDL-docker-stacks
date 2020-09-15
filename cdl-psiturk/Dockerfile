@@ -23,16 +23,17 @@ WORKDIR $WORKDIR
 RUN apt-get update --fix-missing \
     && eatmydata apt-get install -y --no-install-recommends \
         gcc \
+        git \
         python3-dev \
         $APT_PACKAGES \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && conda update -S setuptools \
-    && if [ ! -z $CONDA_PACKAGES ]; then \
+    && if [ -n "$CONDA_PACKAGES" ]; then \
            conda install -Sy $CONDA_PACKAGES \
            && conda clean --all -f -y; \
        fi \
-    && if [ ! -z $PIP_VERSION ]; then \
+    && if [ -n "$PIP_VERSION" ]; then \
            conda install -Sy pip=$PIP_VERSION \
            && conda clean --all -f -y; \
        fi \
@@ -44,4 +45,4 @@ RUN apt-get update --fix-missing \
        fi
 
 # unset command from cdl-python
-CMD []
+CMD ["/bin/bash"]
