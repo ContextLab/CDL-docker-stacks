@@ -20,26 +20,26 @@ WORKDIR $WORKDIR
 #   - install specific pip version (if passed)
 #   - install PsiTurk (dependencies for v2.8.3 are pinned well, so we can skip installing them explicitly)
 # done in this order so that pinned Psiturk dependency versions aren't overwritten
-RUN apt-get update --fix-missing \
-    && eatmydata apt-get install -y --no-install-recommends \
-        gcc \
-        git \
-        python3-dev \
-        $APT_PACKAGES \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && conda update -S setuptools \
-    && if [ -n "$CONDA_PACKAGES" ]; then \
-           conda install -Sy $CONDA_PACKAGES \
-           && conda clean --all -f -y; \
-       fi \
+RUN if [ -n "$APT_PACKAGES" ]; then \
+        apt-get update --fix-missing \
+        && eatmydata apt-get install -y --no-install-recommends $APT_PACKAGES \
+        && apt-get clean \
+        && rm -rf /var/lib/apt/lists/*; \
+    fi \
+    && conda install -Sy \
+        ciso8601=2.1.3 \
+        git=2.28.0 \
+        psutil=5.6.7 \
+        requests-oauthlib=1.3.0 \
+        setproctitle=1.1.10 \
+        $CONDA_PACKAGES \
     && if [ -n "$PIP_VERSION" ]; then \
-           conda install -Sy pip=$PIP_VERSION \
-           && conda clean --all -f -y; \
+           conda install -Sy pip=$PIP_VERSION; \
        fi \
+    && conda clean --all -f -y \
     && pip install --no-cache-dir \
-        $PIP_PACKAGES \
         psiturk==2.3.8 \
+        $PIP_PACKAGES \
     && if [ $MTURK = true ]; then \
            pip install --no-cache-dir pymysql==0.10.0; \
        fi
