@@ -42,9 +42,14 @@ pin_package() {
         local search_str="$(echo "$pkg_spec" | cut -d "${v_spec:0:1}" -f 1)[<>=]"
         local curr_pinned_version=$(conda config --show pinned_packages \
             | grep "^  - $search_str" \
-            | sed 's/  -//')
+            | sed 's/  - //')
 
         if [ -n "$curr_pinned_version" ]; then
+            if [[ "$curr_pinned_version" == "$pkg_spec" ]]; then
+                echo "$curr_pinned_version already pinned"
+                continue
+            fi
+
             conda config --remove pinned_packages "$curr_pinned_version"
             echo "unpinned $curr_pinned_version"
         fi
