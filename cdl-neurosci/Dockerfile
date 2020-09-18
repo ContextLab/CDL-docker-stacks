@@ -3,6 +3,9 @@ FROM contextlab/cdl-datasci:$PYTHON_VERSION
 
 LABEL maintainer="Paxton Fitzpatrick <paxton.c.fitzpatrick@dartmouth.edu>"
 
+# have to re-declare this here because FROM clears all args
+ARG PYTHON_VERSION=3.8
+
 # define other build-time variables
 ARG APT_PACKAGES=""
 ARG CONDA_PACKAGES=""
@@ -20,15 +23,6 @@ ENV NOTEBOOK_PORT $PORT
 # also update working directory, in case passed here
 WORKDIR $WORKDIR
 
-# reduce layers by combining a bunch of conditional steps:
-#   - install additional apt packages
-#   - install additional conda packages
-#   - upgrade/downgrade pip
-#   - install additional pip packages
-# with definite steps:
-#   - ensure setuptools is up to date
-#   - install gcc for brainiak
-#   - install various common neuroscience-related packages
 # TODO: extra required apt packages for brainiak? seem to have auto-installed in Sherlock container
 # TODO: once supereeg supports recent nilearn version and builds pass, should include here
 RUN echo "Building with Python $PYTHON_VERSION" \
@@ -37,17 +31,20 @@ RUN echo "Building with Python $PYTHON_VERSION" \
            && eatmydata apt-get install -y --no-install-recommends $APT_PACKAGES \
            && rm -rf /var/lib/apt/lists/*; \
        fi \
-    && conda update -S setupools \
     && conda install -Sy \
         datalad=0.13.3 \
         nibabel=3.1.1 \
         nilearn=0.6.2 \
-        brainiak=0.10.0 \
-        $CONDA_PACKAGES
+        $CONDA_PACKAGES \
     && if [ -n "$PIP_VERSION" ]; then \
            conda install -Sy pip=$PIP_VERSION; \
        fi \
-    && conda clean --all -f -y \
     && pip install --no-cache-dir \
-        nltools==0.4.1 \
-        $PIP_PACKAGES
+        nltools==0.4.2 \
+        $PIP_PACKAGES \
+    && if [ "$PYTHON_VERSION" = 3.8 ]; then \
+           pip install --no-cache-dir git+https://github.com/brainiak/brainiak.git@938151acff10cf49954f2c9933278de327b9da9d; \
+       else \
+           conda install -Sy -c brainiak brainiak=0.10; \
+       fi \
+    && conda clean --all -f -y \
