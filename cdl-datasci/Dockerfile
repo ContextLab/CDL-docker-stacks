@@ -83,4 +83,4 @@ RUN echo "Building with Python $PYTHON_VERSION" \
            git+https://github.com/paxtonfitzpatrick/hypertools.git@11aa6e84607e936179727dc4ecbcbac16c68cc98 \
            quail==0.2.0 \
            fastdtw==0.3.4 \
-           $PIP_PACKAGES \
+           $PIP_PACKAGES

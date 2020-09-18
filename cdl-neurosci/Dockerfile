@@ -32,7 +32,7 @@ WORKDIR $WORKDIR
 # TODO: extra required apt packages for brainiak? seem to have auto-installed in Sherlock container
 # TODO: once supereeg supports recent nilearn version and builds pass, should include here
 RUN echo "Building with Python $PYTHON_VERSION" \
-    && if [ ! -z $APT_PACKAGES ]; then \
+    && if [ -n "$APT_PACKAGES" ]; then \
            apt-get update --fix-missing \
            && eatmydata apt-get install -y --no-install-recommends $APT_PACKAGES \
            && rm -rf /var/lib/apt/lists/*; \
@@ -44,7 +44,7 @@ RUN echo "Building with Python $PYTHON_VERSION" \
         nilearn=0.6.2 \
         brainiak=0.10.0 \
         $CONDA_PACKAGES
-    && if [ ! -z $PIP_VERSION ]; then \
+    && if [ -n "$PIP_VERSION" ]; then \
            conda install -Sy pip=$PIP_VERSION; \
        fi \
     && conda clean --all -f -y \
