@@ -3,6 +3,9 @@ FROM contextlab/cdl-jupyter:$PYTHON_VERSION
 
 LABEL maintainer="Paxton Fitzpatrick <paxton.c.fitzpatrick@dartmouth.edu>"
 
+# have to re-declare this here because FROM clears all args
+ARG PYTHON_VERSION=3.8
+
 # define other build-time variables
 ARG APT_PACKAGES=""
 ARG CONDA_PACKAGES=""
