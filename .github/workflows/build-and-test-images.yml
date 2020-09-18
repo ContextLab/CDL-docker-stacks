@@ -1,0 +1,268 @@
+name: Build and Test Images
+
+on:
+  pull_request:
+    # may have to change this to pull_request_target in order for secrets to be accessible
+    branches:
+      - master
+    paths:
+      - '**/Dockerfile'
+      - '**/ci/'
+      - 'CI-scripts/'
+      - conftest.py
+  push:
+    branches:
+      - master
+    paths:
+      - '**/Dockerfile'
+      - '**/ci/'
+      - 'CI-scripts/'
+      - conftest.py
+      - .github/*
+defaults:
+  run:
+    shell: bash
+env:
+  DOCKER_HUB_ORG: contextlab
+
+jobs:
+  build-images:
+    name: "Rebuild Updated Images and Dependents (Python${{ matrix.python-version }})"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # [3.6.11, 3.7.8, 3.8.5] according to
+        # https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu1804-README.md
+        python-version: [3.6, 3.7, 3.8]
+    env:
+      PYTHON_VERSION: ${{ matrix.python-version }}
+    outputs:
+      artifact-dir: ${{ steps.setup-environment.outputs.artifact-dir }}
+
+    steps:
+      - name: Clone Repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Set up Environment
+        id: setup-environment
+        # need to set some environment variables here since GitHub contexts
+        # don't support path manipulation
+        run: |
+          ARTIFACT_DIR=$(dirname "$GITHUB_WORKSPACE")/artifacts
+          BUILD_DATA_DIR=$ARTIFACT_DIR/build-data
+          IMAGE_DIR=$ARTIFACT_DIR/images
+          mkdir -p $BUILD_DATA_DIR
+          mkdir -p $IMAGE_DIR
+          echo "::set-output name=artifact-dir::$ARTIFACT_DIR"
+          echo "::set-env name=BUILD_DATA_DIR::$BUILD_DATA_DIR"
+          echo "::set-env name=IMAGE_DIR::$IMAGE_DIR"
+
+      - name: Determine Images to Build
+        run: |
+          modified_dockerfiles=$(git diff-tree \
+                                     --no-commit-id \
+                                     --name-only \
+                                     -r \
+                                     $GITHUB_SHA ${{ github.event.before }} \
+                                 | grep "Dockerfile")
+          to_rebuild=($(python CI-scripts/determine_rebuilds.py "$modified_dockerfiles"))
+          if [ "${#to_rebuild[@]}" -ne 0 ]; then
+              echo "images to rebuild: ${to_rebuild[@]}"
+              echo "::set-env name=TO_REBUILD::$(IFS=:; echo "${to_rebuild[*]}")"
+          else
+              echo "no images to rebuild for Python$PYTHON_VERSION"
+              echo "::set-env name=TO_REBUILD::0"
+          fi
+
+      - name: Rebuild and Export Images
+        if: env.TO_REBUILD != 0
+        run: |
+          TMPIFS=$IFS
+          IFS=':' read -r -a to_rebuild <<< "$TO_REBUILD"
+          IFS=$TMPIFS
+          images_logfile="$BUILD_DATA_DIR/images_python$PYTHON_VERSION.txt"
+          buildtimes_logfile="$BUILD_DATA_DIR/buildtimes_python$PYTHON_VERSION.txt"
+          for img in "${to_rebuild[@]}"; do
+              echo "Building $img..."
+              source "$GITHUB_WORKSPACE/$img/ci/builds.sh"
+              SECONDS=0
+              build_default
+              duration=$SECONDS
+              echo "finished in $duration"
+              echo "Exporting $img..."
+              docker save "$DOCKER_HUB_ORG/$img" | gzip > "$IMAGE_DIR/$img.tar.gz"
+              echo "$img" >> "$images_logfile"
+              echo "$duration" >> "$buildtimes_logfile"
+          done
+
+      - name: Upload Build Data Artifacts
+        if: env.TO_REBUILD != 0
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-data
+          path: $BUILD_DATA_DIR
+
+      - name: Upload Compressed Image Artifacts
+        if: env.TO_REBUILD != 0
+        uses: actions/upload-artifact@v2
+        with:
+          name: "images-python$PYTHON_VERSION"
+          path: $IMAGE_DIR
+
+  create-test-matrix:
+    name: Create Test Job Matrix
+    runs-on: ubuntu-latest
+    needs: build-images
+    env:
+      BUILD_DATA_DIR: ${{ needs.build-images.outputs.artifact-dir }}/build-data
+    outputs:
+      test-matrix: ${{ steps.create-matrix.outputs.test-matrix }}
+
+    steps:
+      - run: mkdir -p $BUILD_DATA_DIR
+
+      - name: Download Build Data Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: build-data
+          path: $BUILD_DATA_DIR
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Create Test Matrix
+        id: create-matrix
+        shell: python
+        run: |
+          import json
+          from os import getenv
+          from pathlib import Path
+
+          data_dir = Path(getenv('BUILD_DATA_DIR')).resolve()
+          includes = list()
+          for f in data_dir.glob('images*'):
+              py_version = f.stem.replace('images_python', '')
+              images = f.read_text().splitlines()
+              for img in images:
+                  includes.append({'image': img, 'python-version': py_version, 'build-style': 'default'})
+                  if img != 'cdl-base':
+                      includes.append({'image': img, 'python-version': py_version, 'build-style': 'custom'})
+
+          matrix = {'include': includes}
+          print(f'TEST MATRIX JOBS:\n\n{json.dumps(matrix, indent=4)}')
+          matrix_json = json.dumps(matrix)
+          print("::set-output name=test-matrix::matrix_json")
+
+  test-images:
+    name: "Test ${{ matrix.image }} (Python${{ matrix.python-version }}, ${{ matrix.build-style }} build)"
+    runs-on: ubuntu-latest
+    needs: [build-images, create-test-matrix]
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.create-test-matrix.outputs.test-matrix) }}
+    env:
+      IMAGE_NAME: ${{ matrix.image }}
+      PYTHON_VERSION: ${{ matrix.python-version }}
+      BUILD_STYLE: ${{ matrix.build-style }}
+      IMAGE_DIR: ${{ needs.build-images.outputs.artifact-dir }}/images
+
+    steps:
+      - name: Clone Repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - run: mkdir -p $IMAGE_DIR
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install Python Packages for Tests
+        run: |
+          pip install \
+              docker==4.3.1 \
+              pytest==6.0.1 \
+              pytest-ordering==0.6
+
+      - name: "Download Python$PYTHON_VERSION Image Artifacts"
+        uses: actions/download-artifact@v2
+        with:
+          name: "images-python$PYTHON_VERSION"
+          path: $IMAGE_DIR
+
+      - name: Load Pre-Built Images from Artifacts
+        working-directory: $IMAGE_DIR
+        run: |
+          for img_archive in {.,}*; do
+              docker load -i $img_archive
+          done
+
+      - name: Build Custom Image with build-args
+        if: matrix.build-style == 'custom'
+        working-directory: "$GITHUB_WORKSPACE/$IMAGE_NAME"
+        run: |
+          docker rmi $DOCKER_HUB_ORG/$IMAGE_NAME
+          source ci/builds.sh
+          build_custom
+
+      - name: Run Tests
+        run: pytest -v
+
+  push-to-docker-hub:
+    name: Push Updated Images to Docker Hub
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' }}
+    needs: test-images
+    strategy:
+      fast-fail: true
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+    env:
+      PYTHON_VERSION: ${{ matrix.python-version }}
+
+    steps:
+      - run: |
+          IMAGE_DIR=$(dirname "$GITHUB_WORKSPACE")/artifacts/images
+          mkdir -p $IMAGE_DIR
+          echo "::set-env name=IMAGE_DIR::$ARTIFACT_DIR"
+
+      - name: "Download Python$PYTHON_VERSION Image Artifacts"
+        uses: actions/download-artifacts@v2
+        with:
+          name: "images-python$PYTHON_VERSION"
+          path: $IMAGE_DIR
+
+      - name: Load Pre-Built Images from Artifacts
+          working-directory: $IMAGE_DIR
+          run: |
+            for img_archive in *; do
+                docker load -i $img_archive
+            done
+
+      - name: Log into Docker Hub
+        run: echo $"{{ secrets.DOCKER_HUB_PASSWORD }} | docker login \
+                --username $DOCKER_HUB_ORG --password-stdin
+
+      - name: Push Images to Docker Hub
+        working-directory: $IMAGE_DIR
+        run: |
+          for img_file in *; do
+              img=$(echo $img_file | cut -d '.' -f 1)
+              if [[ "$img" == "cdl-base" ]]; then
+                  if [[ "$PYTHON_VERSION" == "3.8" ]]; then
+                      docker push "$DOCKER_HUB_ORG/$img:latest"
+                  fi
+              else
+                  docker push "$DOCKER_HUB_ORG/$IMG:$PYTHON_VERSION"

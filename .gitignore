@@ -10,6 +10,3 @@
 # notebook files and checkpoints
 *.ipynb
 *.ipynb_checkpoints
-
-# ignoring GitHub workflows until finished
-.github
