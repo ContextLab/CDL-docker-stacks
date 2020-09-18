@@ -3,6 +3,9 @@ FROM contextlab/cdl-python:$PYTHON_VERSION
 
 LABEL maintainer="Paxton Fitzpatrick <paxton.c.fitzpatrick@dartmouth.edu>"
 
+# have to re-declare this here because FROM clears all args
+ARG PYTHON_VERSION=3.8
+
 # define other build-time variables
 ARG APT_PACKAGES=""
 ARG CONDA_PACKAGES=""
@@ -50,18 +53,18 @@ RUN echo "Building with Python $PYTHON_VERSION" \
         ipython=$IPYTHON_VERSION \
         $CONDA_PACKAGES \
     && source /etc/profile.d/pin_conda_package_version.sh \
-    && pin_package tini minor \
-    && pin_package jupyter minor \
-    && pin_package notebook minor \
-    && pin_package ipython minor \
+    && pin_package tini exact \
+    && pin_package jupyter minor min \
+    && pin_package notebook minor min \
+    && pin_package ipython exact \
     && if (( $(echo "$PY_MAJ_MIN >= 3.6" | bc -l) )); then \
            conda install -Sy \
                ipywidgets=7.5.1 \
                jupyter_contrib_nbextensions=0.5.1 \
                nbconvert=5.6.1 \
                pandoc=2.10 \
-           && pin_package jupyter-contrib minor \
-           && pin_package nbconvert minor \
+           && pin_package jupyter_contrib exact \
+           && pin_package nbconvert minor min \
            && jupyter nbextension enable --py widgetsnbextension --sys-prefix; \
        fi \
     && if [ -n "$PIP_VERSION" ]; then \

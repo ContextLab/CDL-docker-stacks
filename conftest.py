@@ -59,7 +59,9 @@ def manage_containers(request, container):
 
 
 def pytest_configure(config):
+    config.addinivalue_line('markers', 'child_image_test')
     config.addinivalue_line('markers', 'no_inherit_test')
+    config.addinivalue_line('markers', 'custom_build_test')
 
 
 def pytest_collection_modifyitems(items):
