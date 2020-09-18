@@ -1,3 +1,6 @@
+import os
+import tarfile
+
 import pytest
 
 
@@ -5,7 +8,7 @@ import pytest
 #            CONTAINER TESTS           #
 ########################################
 def test_correct_python_version_installed(container, conda_env):
-    expected_version = container.expected_attrs.get('PYTHON_VERSION')
+    expected_version = container.expected_attrs.get('python_version')
     installed_version = conda_env.installed_packages.get('python')
     assert installed_version.matches_version(expected_version)
 
@@ -26,12 +29,108 @@ def test_pin_package_script_in_profile(container):
     assert 'pin_conda_package_version.sh' in output
 
 
+def test_pip_cache_removed(container):
+    c = container.run('ls -a ~/.cache/pip', remove=False)
+    log = c.logs().decode('utf-8').strip()
+    assert 'No such file or directory' in log
+
+
 @pytest.mark.no_inherit_test
 def test_python_default_cmd(container):
     c = container.run(command=None, shell=None)
     c.stop(timeout=1)
     default_cmd = c.attrs.get('Config').get('Cmd')
     assert default_cmd == ['python']
+
+
+def test_run_script_mounted(container):
+    repo_root = os.getenv("GITHUB_WORKSPACE")
+    script_path = os.path.join(repo_root, 'cdl-python', 'ci', 'simple_script.py')
+    expected_testfile_path = os.path.join(os.path.dirname(script_path), 'testfile.txt')
+    c = container.run('simple_script.py testfile.txt',
+                      shell='python',
+                      mountpoint_container='/mnt',
+                      mountpoint_local=repo_root)
+    lines = c.logs().decode('utf-8').strip().splitlines()
+
+    # two print statements should've been executed
+    assert len(lines) == 2
+
+    # text should be the same before/after being written to/read from file
+    orig_message, file_message = lines
+    assert orig_message == file_message
+
+    # should be able to access hostname from inside container, and it
+    # should match the container ID (first 12 characters)
+    hostname = orig_message.replace("Hello, world! I'm ", '').split()[0]
+    container_id = c.id[:len(hostname)]
+    assert hostname == container_id
+
+    # should be able to read the Python version from inside the container
+    inside_py_version = orig_message.split()[-1]
+    outside_py_version = container.expected_attrs.get('python_version')
+    assert inside_py_version == outside_py_version
+
+    # file should exist at expected location
+    assert os.path.isfile(expected_testfile_path)
+
+    # clean up
+    os.remove(expected_testfile_path)
+
+
+def test_run_script_unmounted(container):
+    # store cwd to return to after test
+    cwd = os.getcwd()
+    repo_root = os.getenv("GITHUB_WORKSPACE")
+    ci_dir = os.path.join(repo_root, 'cdl-python', 'ci')
+    script_name = 'simple_script.py'
+    tarfile_name = f'{script_name}.tar'
+    dest_filepath = f'/mnt/{script_name}'
+
+    # run from dir of tarfile so container paths are created correctly
+    os.chdir(ci_dir)
+    with tarfile.open(tarfile_name, 'w') as tf:
+        tf.add(script_name)
+
+    # start background process to keep container running
+    c = container.run('sleep infinity', max_wait=-1)
+    with open(tarfile_name, 'rb') as tf:
+        # Python API method of implementing docker cp
+        c.put_archive('/mnt', tf)
+
+    output = c.exec_run(['python', dest_filepath, 'testfile.txt'],
+                        detach=False,
+                        tty=True).decode('utf-8').strip()
+    lines = output.splitlines()
+
+    # two print statements should've been executed
+    assert len(lines) == 2
+
+    # text should be the same before/after being written to/read from file
+    orig_message, file_message = lines
+    assert orig_message == file_message
+
+    # should be able to access hostname from inside container, and it
+    # should match the container ID (first 12 characters)
+    hostname = orig_message.replace("Hello, world! I'm ", '').split()[0]
+    container_id = c.id[:len(hostname)]
+    assert hostname == container_id
+
+    # should be able to read the Python version from inside the container
+    inside_py_version = orig_message.split()[-1]
+    outside_py_version = container.expected_attrs.get('python_version')
+    assert inside_py_version == outside_py_version
+
+    # file should exist at expected location
+    stat_msg = c.exec_run(['/bin/bash', '-c', f'stat {dest_filepath}'],
+                          detach=False,
+                          tty=True).decode('utf-8').strip()
+    assert "No such file or directory" not in stat_msg
+
+    # clean up
+    os.remove(tarfile_name)
+    os.chdir(cwd)
+    c.stop()
 
 
 ########################################
@@ -70,12 +169,6 @@ def test_conda_cache_cleaned(container, conda_env):
         log = c.logs().decode('utf-8').strip()
         c.remove()
         assert 'No such file or directory' in log
-
-
-def test_pip_cache_removed(container):
-    c = container.run('ls -a ~/.cache/pip', remove=False)
-    log = c.logs().decode('utf-8').strip()
-    assert 'No such file or directory' in log
 
 
 # TODO: figure out how to parametrize this with pytest-cases rather than looping
@@ -173,5 +266,13 @@ def test_custom_pip_packages_installed(container, conda_env):
 @pytest.mark.custom_build_test
 @pytest.mark.last
 def test_all_custom_build_args_tested(container):
-    # each custom_build_tests pops the attr tested, so none should be left
-    assert len(container.expected_attrs) == 0
+    # each custom_build_tests pops the attr tested, so if all have been
+    # covered by tests, none should be left by the last test (except
+    # python_version, which isn't changed for custom builds)
+    untested_attrs = container.expected_attrs
+    try:
+        untested_attrs.pop('python_version')
+    except KeyError:
+        pass
+
+    assert len(untested_attrs) == 0
