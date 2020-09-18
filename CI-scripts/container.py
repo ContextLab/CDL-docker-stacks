@@ -44,7 +44,7 @@ class Container:
                 elif value == 'false':
                     value = False
 
-                expected_attrs[attr] = value
+                expected_attrs[attr.lower()] = value
 
         return expected_attrs
 
@@ -168,7 +168,7 @@ class Container:
         # if detach is True, returns a docker.containers.Container instance
         if detach:
             # set max_wait to -1 to return without waiting
-            # (needed when testing notebook server)
+            # (e.g., when testing notebook server)
             if max_wait >= 0:
                 try:
                     container.wait(timeout=max_wait)
