@@ -226,7 +226,7 @@ jobs:
     if: ${{ github.event_name == 'push' }}
     needs: test-images
     strategy:
-      fast-fail: true
+      fail-fast: true
       matrix:
         python-version: [3.6, 3.7, 3.8]
     env:
