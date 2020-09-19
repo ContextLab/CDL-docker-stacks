@@ -245,11 +245,11 @@ jobs:
           path: $IMAGE_DIR
 
       - name: Load Pre-Built Images from Artifacts
-          working-directory: $IMAGE_DIR
-          run: |
-            for img_archive in *; do
-                docker load -i $img_archive
-            done
+        working-directory: $IMAGE_DIR
+        run: |
+          for img_archive in *; do
+              docker load -i $img_archive
+          done
 
       - name: Log into Docker Hub
         run: echo $"{{ secrets.DOCKER_HUB_PASSWORD }} | docker login \
