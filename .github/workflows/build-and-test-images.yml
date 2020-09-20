@@ -132,7 +132,7 @@ jobs:
           print(to_rebuild_command)
           print(to_push_command)
 
-          artifact_dir = str(Path(repo_dir).parent.joinpath('artifacts'))
+          artifact_dir = str(Path(repo_path).parent.joinpath('artifacts'))
           set_artifact_dir_command = f"::set-output name=artifact-dir::{artifact_dir}"
           print(set_artifact_dir_command)
 
