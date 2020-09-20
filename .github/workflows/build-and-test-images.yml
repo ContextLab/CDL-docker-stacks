@@ -153,8 +153,8 @@ jobs:
     steps:
       - name: Check for Images to Rebuild
         run: |
-          echo ${{ needs.parse-changes.outputs.3_8 }}
-          echo ${{ needs.parse-changes.outputs['3_8'] }}
+          echo ${{ needs.parse-changes.outputs.to-rebuild-3_8 }}
+          echo ${{ needs.parse-changes.outputs[to-rebuild-3_8] }}
           to_rebuild_key="to-rebuild-${PYTHON_VERSION//./_}"
           echo "::set-env name=TO_REBUILD_KEY::$to_rebuild_key"
           to_rebuild=${{ needs.parse-changes.outputs[env.to_rebuild_key] }}
