@@ -136,6 +136,9 @@ jobs:
           set_artifact_dir_command = f"::set-output name=artifact-dir::{artifact_dir}"
           print(set_artifact_dir_command)
 
+          print(f'to_rebuild is {to_rebuild}')
+          print(f'command is {to_rebuild_command}')
+
   rebuild-images:
     name: "Rebuild Updated Images and Dependents (Python ${{ matrix.python-version }})"
     runs-on: ubuntu-latest
@@ -153,7 +156,7 @@ jobs:
     steps:
       - name: Check for Images to Rebuild
         run: |
-          echo ${{ needs.parse-changes.outputs }}
+          echo ${{ toJson(needs.parse-changes.outputs) }}
           to_rebuild_key="to-rebuild-${PYTHON_VERSION//./_}"
           echo "::set-env name=TO_REBUILD_KEY::$to_rebuild_key"
           to_rebuild=${{ needs.parse-changes.outputs[env.to_rebuild_key] }}
