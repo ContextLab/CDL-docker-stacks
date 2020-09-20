@@ -159,8 +159,6 @@ jobs:
           echo "${{ toJson(needs.parse-changes.outputs) }}"
           to_rebuild_key="to-rebuild-${PYTHON_VERSION//./_}"
           echo "to_rebuild_key is $to_rebuild_key"
-          echo "${{ needs.parse-changes.outputs[to_rebuild_key] }}"
-          echo ${{ needs.parse-changes.outputs[to_rebuild_key] }}
           echo "::set-env name=TO_REBUILD_KEY::$to_rebuild_key"
 
       - name: Check 2
