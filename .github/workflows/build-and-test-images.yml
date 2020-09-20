@@ -36,12 +36,12 @@ jobs:
       PREVIOUS_SHA: ${{ github.event.before }}"
     outputs:
       artifact-dir: ${{ steps.get-images.outputs.artifact-dir }}
-      to-rebuild-3.6: ${{ steps.get-images.outputs.to-rebuild-3.6 }}
-      to-rebuild-3.7: ${{ steps.get-images.outputs.to-rebuild-3.7 }}
-      to-rebuild-3.8: ${{ steps.get-images.outputs.to-rebuild-3.8 }}
-      to-push-3.6: ${{ steps.get-images.outputs.to-push-3.6 }}
-      to-push-3.7: ${{ steps.get-images.outputs.to-push-3.7 }}
-      to-push-3.8: ${{ steps.get-images.outputs.to-push-3.8 }}
+      to-rebuild-3_6: ${{ steps.get-images.outputs.to-rebuild-3_6 }}
+      to-rebuild-3_7: ${{ steps.get-images.outputs.to-rebuild-3_7 }}
+      to-rebuild-3_8: ${{ steps.get-images.outputs.to-rebuild-3_8 }}
+      to-push-3_6: ${{ steps.get-images.outputs.to-push-3_6 }}
+      to-push-3_7: ${{ steps.get-images.outputs.to-push-3_7 }}
+      to-push-3_8: ${{ steps.get-images.outputs.to-push-3_8 }}
 
     steps:
       - name: Clone Repo
@@ -125,8 +125,9 @@ jobs:
               print(f"Workflow triggered by non-push event: {trigger_event}. Skipping push to Docker Hub")
               to_push = 0
 
-          to_rebuild_command = f"::set-output name=to-rebuild-{python_version}::{to_rebuild}"
-          to_push_command = f"::set-output name=to-push-{python_version}::{to_push}"
+          py_v = python_version.replace('.', '_')
+          to_rebuild_command = f"::set-output name=to-rebuild-{py_v}::{to_rebuild}"
+          to_push_command = f"::set-output name=to-push-{py_v}::{to_push}"
           print(to_rebuild_command)
           print(to_push_command)
 
@@ -151,7 +152,7 @@ jobs:
     steps:
       - name: Check for Images to Rebuild
         run: |
-          to_rebuild_key="to-rebuild-$PYTHON_VERSION"
+          to_rebuild_key="to-rebuild-${PYTHON_VERSION//./_}"
           to_rebuild=${{ needs.parse-changes.outputs[to_rebuild_key] }}
           echo "::set-env name=TO_REBUILD::$to_rebuild"
 
@@ -322,7 +323,7 @@ jobs:
     steps:
       - name: Check for Images to Push
         run: |
-          to_push_key="to-push-$PYTHON_VERSION"
+          to_push_key="to-push-${PYTHON_VERSION//./_}"
           to_push=${{ needs.parse-changes.outputs[to_push_key] }}
           echo "::set-env name=TO_PUSH::$to_push"
 
