@@ -153,7 +153,8 @@ jobs:
       - name: Check for Images to Rebuild
         run: |
           to_rebuild_key="to-rebuild-${PYTHON_VERSION//./_}"
-          to_rebuild=${{ needs.parse-changes.outputs[to_rebuild_key] }}
+          echo "::set-env name=TO_REBUILD_KEY::$to_rebuild_key"
+          to_rebuild=${{ needs.parse-changes.outputs[env.to_rebuild_key] }}
           echo "::set-env name=TO_REBUILD::$to_rebuild"
 
       - name: Clone Repo
@@ -324,7 +325,8 @@ jobs:
       - name: Check for Images to Push
         run: |
           to_push_key="to-push-${PYTHON_VERSION//./_}"
-          to_push=${{ needs.parse-changes.outputs[to_push_key] }}
+          echo "::set-env name=TO_PUSH_KEY::$to_push_key"
+          to_push=${{ needs.parse-changes.outputs[env.to_push_key] }}
           echo "::set-env name=TO_PUSH::$to_push"
 
       - name: "Download Python $PYTHON_VERSION Image Artifacts"
