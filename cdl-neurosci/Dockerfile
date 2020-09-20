@@ -23,11 +23,9 @@ ENV NOTEBOOK_PORT $PORT
 # also update working directory, in case passed here
 WORKDIR $WORKDIR
 
-# TODO: extra required apt packages for brainiak? seem to have auto-installed in Sherlock container
-# TODO: once supereeg supports recent nilearn version and builds pass, should include here
-
 # installing brainiak from GitHub due to a bug in v0.10 that caused them to pin
 # sklearn<0.22. Bug is fixed and tests are passing at this commit
+# TODO: once supereeg supports recent nilearn version and builds pass, should include here
 RUN echo "Building with Python $PYTHON_VERSION" \
     && apt-get update --fix-missing \
     && eatmydata apt-get install -y --no-install-recommends \

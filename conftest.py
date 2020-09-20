@@ -6,7 +6,7 @@ import docker
 import pytest
 
 
-sys.path.insert(0, 'CI-scripts')
+sys.path.insert(0, 'CI-classes')
 from conda_environment import CondaEnvironment
 from container import Container
 from image_tree import ImageTree
