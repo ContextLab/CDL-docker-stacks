@@ -101,6 +101,7 @@ jobs:
 
           edited_image_dirs = set(edited_image_dirs)
           image_tree = ImageTree(repo_path)
+          linesep = '\n\t'
 
           if rebuild_all:
               to_rebuild = ':'.join(image_tree.all_images)
@@ -110,7 +111,7 @@ jobs:
               print(f"no images to rebuild for Python {python_version}")
           else:
               to_rebuild = image_tree.get_dependents(edited_image_dirs)
-              print(f"{len(to_rebuild)} images will be rebuilt:\n\t{'\n\t'.join(to_rebuild)}")
+              print(f"{len(to_rebuild)} images will be rebuilt:\n\t{linesep.join(to_rebuild)}")
               to_rebuild = ':'.join(to_rebuild)
 
           if trigger_event == 'push':
@@ -119,7 +120,7 @@ jobs:
                   to_push = 0
               else:
                   to_push = image_tree.get_dependents(edited_images)
-                  print(f"{len(to_push)} images will be pushed to Docker Hub:\n\t{'\n\t'.join(to_push)}")
+                  print(f"{len(to_push)} images will be pushed to Docker Hub:\n\t{linesep.join(to_push)}")
                   to_push = ':'.join(to_push)
           else:
               print(f"Workflow triggered by non-push event: {trigger_event}. Skipping push to Docker Hub")
