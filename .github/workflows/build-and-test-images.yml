@@ -33,7 +33,7 @@ jobs:
         python-version: [3.6, 3.7, 3.8]
     env:
       PYTHON_VERSION: ${{ matrix.python-version }}
-      PREVIOUS_SHA: ${{ github.event.before }}"
+      PREVIOUS_SHA: ${{ github.event.before }}
     outputs:
       artifact-dir: ${{ steps.get-images.outputs.artifact-dir }}
       to-rebuild-3_6: ${{ steps.get-images.outputs.to-rebuild-3_6 }}
