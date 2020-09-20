@@ -207,7 +207,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-images
     env:
-      BUILD_DATA_DIR: ${{ needs.build-images.outputs.artifact-dir }}/build-data
+      BUILD_DATA_DIR: ${{ needs.parse-changes.outputs.artifact-dir }}/build-data
     outputs:
       test-matrix: ${{ steps.create-matrix.outputs.test-matrix }}
 
@@ -251,7 +251,7 @@ jobs:
   test-images:
     name: "Test ${{ matrix.image }} (Python ${{ matrix.python-version }}, ${{ matrix.build-style }} build)"
     runs-on: ubuntu-latest
-    needs: [build-images, create-test-matrix]
+    needs: [rebuild-images, create-test-matrix]
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.create-test-matrix.outputs.test-matrix) }}
@@ -259,7 +259,7 @@ jobs:
       IMAGE_NAME: ${{ matrix.image }}
       PYTHON_VERSION: ${{ matrix.python-version }}
       BUILD_STYLE: ${{ matrix.build-style }}
-      IMAGE_DIR: ${{ needs.build-images.outputs.artifact-dir }}/images
+      IMAGE_DIR: ${{ needs.parse-changes.outputs.artifact-dir }}/images
 
     steps:
       - name: Clone Repo
