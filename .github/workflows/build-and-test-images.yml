@@ -158,8 +158,10 @@ jobs:
         run: |
           echo ${{ toJson(needs.parse-changes.outputs) }}
           to_rebuild_key="to-rebuild-${PYTHON_VERSION//./_}"
+          echo "to_rebuild_key is $to_rebuid_key"
           echo "::set-env name=TO_REBUILD_KEY::$to_rebuild_key"
-          to_rebuild=${{ needs.parse-changes.outputs[env.to_rebuild_key] }}
+          to_rebuild="${{ needs.parse-changes.outputs[env.to_rebuild_key] }}"
+          echo "to_rebuild is $to_rebuild"
           echo "::set-env name=TO_REBUILD::$to_rebuild"
 
       - name: Clone Repo
