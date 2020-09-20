@@ -106,7 +106,7 @@ jobs:
           if rebuild_all:
               to_rebuild = ':'.join(image_tree.all_images)
               print("General-purpose file edited. Rebuilding all images")
-          elif len(to_rebuild) == 0:
+          elif len(edited_image_dirs) == 0:
               to_rebuild = 0
               print(f"no images to rebuild for Python {python_version}")
           else:
@@ -115,7 +115,7 @@ jobs:
               to_rebuild = ':'.join(to_rebuild)
 
           if trigger_event == 'push':
-              if len(to_push) == 0:
+              if len(edited_images) == 0:
                   print(f"no Dockerfiles modified since {old_sha}. Skipping push to Docker Hub")
                   to_push = 0
               else:
