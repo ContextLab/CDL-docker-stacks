@@ -7,16 +7,16 @@ on:
       - master
     paths:
       - '**/Dockerfile'
-      - '**/ci/'
-      - 'CI-classes/'
+      - '**/ci/**'
+      - 'CI-classes/**'
       - conftest.py
   push:
     branches:
       - master
     paths:
       - '**/Dockerfile'
-      - '**/ci/'
-      - 'CI-classes/'
+      - '**/ci/**'
+      - 'CI-classes/**'
       - conftest.py
       - .github/workflows/*
 defaults:
