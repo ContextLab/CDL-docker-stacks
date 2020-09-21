@@ -178,6 +178,7 @@ jobs:
 
       - name: Rebuild and Export Updated Images
         if: env.TO_REBUILD != 0
+        shell: python
         run: |
           TMPIFS=$IFS
           IFS=':' read -r -a to_rebuild <<< "$TO_REBUILD"
@@ -259,12 +260,12 @@ jobs:
           print("::set-output name=test-matrix::matrix_json")
 
   test-images:
+    runs-on: ubuntu-latest
+      needs: [create-test-matrix, parse-changes]
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.create-test-matrix.outputs.test-matrix) }}
     name: "Test ${{ matrix.image }} (Python ${{ matrix.python-version }}, ${{ matrix.build-style }} build)"
-    runs-on: ubuntu-latest
-    needs: [create-test-matrix, rebuild-images]
     env:
       IMAGE_NAME: ${{ matrix.image }}
       PYTHON_VERSION: ${{ matrix.python-version }}
@@ -284,7 +285,7 @@ jobs:
         with:
           # [3.6.11, 3.7.8, 3.8.5] according to
           # https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu1804-README.md
-          python-version: 3.8
+          python-version: ${{ matrix.python-version }}
 
       - name: Install Python Packages for Tests
         run: |
@@ -292,6 +293,9 @@ jobs:
               docker==4.3.1 \
               pytest==6.0.1 \
               pytest-ordering==0.6
+
+      - name: Set Download vs Pull Preferences
+
 
       - name: "Download Python $PYTHON_VERSION Image Artifacts"
         uses: actions/download-artifact@v2
