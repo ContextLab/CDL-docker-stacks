@@ -256,7 +256,6 @@ jobs:
           matrix = {'include': includes}
           print(f'TEST MATRIX JOBS:\n{json.dumps(matrix, indent=4)}')
           matrix_json = json.dumps(matrix).replace(' ', '')
-          print(matrix_json)
           matrix_command = f"::set-output name=test-matrix::{matrix_json}"
           print(matrix_command)
 
