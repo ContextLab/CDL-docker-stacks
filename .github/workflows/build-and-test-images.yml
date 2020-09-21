@@ -348,7 +348,7 @@ jobs:
         run: |
           if [[ "$IMAGE_NAME" == "cdl-base" ]]; then
               image_tag="latest"
-          else:
+          else
               image_tag="$PYTHON_VERSION"
           fi
 
