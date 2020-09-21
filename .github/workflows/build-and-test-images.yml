@@ -178,7 +178,6 @@ jobs:
 
       - name: Rebuild and Export Updated Images
         if: env.TO_REBUILD != 0
-        shell: python
         run: |
           TMPIFS=$IFS
           IFS=':' read -r -a to_rebuild <<< "$TO_REBUILD"
@@ -246,7 +245,7 @@ jobs:
           parse_changes_output = json.loads(getenv("PARSE_CHANGES_OUTPUT"))
 
           for k, v in parse_changes_output.items():
-              if k.startswith('to-retest') and v != 0:
+              if k.startswith('to-retest-') and v != 0:
                   py_version = int(k.split('-')[-1].replace('_', '.'))
                   images = v.split(':')
                       for img in images:
@@ -294,16 +293,40 @@ jobs:
               pytest==6.0.1 \
               pytest-ordering==0.6
 
-      - name: Set Download vs Pull Preferences
+      - name: Determine Download Artifact vs Pull Preferences
+        shell: python
+        env:
+          PARSE_CHANGES_OUTPUT: ${{ toJson(needs.parse-changes.outputs) }}
+        run: |
+          import json
+          from os import getenv
 
+          image_name = getenv("IMAGE_NAME")
+          python_version = getenv("PYTHON_VERSION")
+          build_style = getenv("BUILD_STYLE")
+
+          if build_style == 'custom':
+              pref = 'build'
+          else:
+              parse_changes_output = json.loads(getenv("PARSE_CHANGES_OUTPUT"))
+              py_version_rebuilds = parse_changes_output[f"to-rebuild-{python_version.replace('.', '_')}"]
+              py_version_rebuilds = py_version_rebuilds.split(':')
+              if image_name in py_version_rebuilds:
+                  pref = 'build'
+              else:
+                  pref = 'pull'
+
+          print("::set-env name=pref::pref")
 
       - name: "Download Python $PYTHON_VERSION Image Artifacts"
+        if: env.pref == 'build'
         uses: actions/download-artifact@v2
         with:
           name: "images-python$PYTHON_VERSION"
           path: $IMAGE_DIR
 
       - name: Load Pre-Built Images from Artifacts
+        if: env.pref == 'build'
         working-directory: $IMAGE_DIR
         run: |
           for img_archive in {.,}*; do
@@ -318,13 +341,24 @@ jobs:
           source ci/builds.sh
           build_custom
 
+      - name: Pull Image from Docker Hub
+        if: env.pref == 'pull'
+        run: |
+          if [[ "$IMAGE_NAME" == "cdl-base" ]]; then
+              image_tag="latest"
+          else:
+              image_tag="$PYTHON_VERSION"
+          fi
+
+          docker pull $DOCKER_HUB_ORG/$IMAGE_NAME:$image_tag
+
       - name: Run Tests
         run: pytest -v
 
   push-to-docker-hub:
-    name: Push Updated Images to Docker Hub
+    name: "Push Updated Images to Docker Hub (Python ${{ matrix.python-version }})"
     runs-on: ubuntu-latest
-    needs: [parse-changes, test-images]
+    needs: [test-images, parse-changes]
     if: github.repository_owner == 'ContextLab' && github.event_name == 'push'
     strategy:
       fail-fast: true
@@ -336,12 +370,12 @@ jobs:
 
     steps:
       - run: |
-          to_push_key="to-push-${PYTHON_VERSION//./_}"
-          echo "::set-env name=TO_PUSH_KEY::$to_push_key"
+          to_rebuild_key="to-rebuild-${PYTHON_VERSION//./_}"
+          echo "::set-env name=TO_REBUILD_KEY::$to_rebuild_key"
 
       - name: Check for Images to Push
         run: |
-          to_push=${{ needs.parse-changes.outputs[env.TO_PUSH_KEY] }}
+          to_push=${{ needs.parse-changes.outputs[env.TO_REBUILD_KEY] }}
           echo "::set-env name=TO_PUSH::$to_push"
 
       - name: "Download Python $PYTHON_VERSION Image Artifacts"
