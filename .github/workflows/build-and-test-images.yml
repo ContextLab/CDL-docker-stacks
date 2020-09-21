@@ -1,4 +1,4 @@
-name: Build and Test Images
+name: Build, Test & Push Images
 
 on:
   pull_request:
@@ -22,6 +22,8 @@ on:
 defaults:
   run:
     shell: bash
+env:
+  DOCKER_HUB_ORG: contextlab
 
 jobs:
   parse-changes:
@@ -136,9 +138,6 @@ jobs:
           set_artifact_dir_command = f"::set-output name=artifact-dir::{artifact_dir}"
           print(set_artifact_dir_command)
 
-          print(f'to_rebuild is {to_rebuild}')
-          print(f'command is {to_rebuild_command}')
-
   rebuild-images:
     name: "Rebuild Updated Images and Dependents (Python ${{ matrix.python-version }})"
     runs-on: ubuntu-latest
@@ -154,20 +153,15 @@ jobs:
       IMAGE_DIR: ${{ needs.parse-changes.outputs.artifact-dir }}/images
 
     steps:
-      - name: Check for Images to Rebuild 1
-        run: |
-          echo "${{ toJson(needs.parse-changes.outputs) }}"
+        # has to be a separate step because variables set via set-env aren't
+        # accessible until the next step
+      - run: |
           to_rebuild_key="to-rebuild-${PYTHON_VERSION//./_}"
-          echo "to_rebuild_key is $to_rebuild_key"
           echo "::set-env name=TO_REBUILD_KEY::$to_rebuild_key"
 
-      - name: Check 2
+      - name: Check for Images to Rebuild
         run: |
-          echo "${{ env.TO_REBUILD_KEY }}"
-          echo "${{ needs.parse-changes.outputs[env.TO_REBUILD_KEY] }}"
-          echo ${{ needs.parse-changes.outputs[env.TO_REBUILD_KEY] }}
           to_rebuild=${{ needs.parse-changes.outputs[env.TO_REBUILD_KEY] }}
-          echo "to_rebuild is ${to_rebuild}"
           echo "::set-env name=TO_REBUILD::$to_rebuild"
 
       - name: Clone Repo
@@ -177,6 +171,7 @@ jobs:
           fetch-depth: 0
 
       - name: Rebuild and Export Images
+        if: env.TO_REBUILD != 0
         run: |
           TMPIFS=$IFS
           IFS=':' read -r -a to_rebuild <<< "$TO_REBUILD"
@@ -204,12 +199,14 @@ jobs:
           done
 
       - name: Upload Build Data Artifacts
+        if: env.TO_REBUILD != 0
         uses: actions/upload-artifact@v2
         with:
           name: build-data
           path: $BUILD_DATA_DIR
 
       - name: Upload Compressed Image Artifacts
+        if: env.TO_REBUILD != 0
         uses: actions/upload-artifact@v2
         with:
           name: "images-python$PYTHON_VERSION"
@@ -331,15 +328,16 @@ jobs:
         python-version: [3.6, 3.7, 3.8]
     env:
       PYTHON_VERSION: ${{ matrix.python-version }}
-      DOCKER_HUB_ORG: contextlab
       IMAGE_DIR: ${{ needs.parse-changes.outputs.artifact-dir }}/images
 
     steps:
-      - name: Check for Images to Push
-        run: |
+      - run: |
           to_push_key="to-push-${PYTHON_VERSION//./_}"
           echo "::set-env name=TO_PUSH_KEY::$to_push_key"
-          to_push=${{ needs.parse-changes.outputs[env.to_push_key] }}
+
+      - name: Check for Images to Push
+        run: |
+          to_push=${{ needs.parse-changes.outputs[env.TO_PUSH_KEY] }}
           echo "::set-env name=TO_PUSH::$to_push"
 
       - name: "Download Python $PYTHON_VERSION Image Artifacts"
@@ -350,6 +348,7 @@ jobs:
           path: $IMAGE_DIR
 
       - name: Load Pre-Built Images from Artifacts
+        if: env.TO_PUSH != 0
         working-directory: $IMAGE_DIR
         run: |
           for img_archive in *; do
@@ -357,10 +356,12 @@ jobs:
           done
 
       - name: Log into Docker Hub
+        if: env.TO_PUSH != 0
         run: echo $"{{ secrets.DOCKER_HUB_PASSWORD }} | docker login \
                 --username $DOCKER_HUB_ORG --password-stdin
 
       - name: Push Images to Docker Hub
+        if: env.TO_PUSH != 0
         working-directory: $IMAGE_DIR
         run: |
           for img_file in *; do
