@@ -38,12 +38,12 @@ jobs:
       PREVIOUS_SHA: ${{ github.event.before }}
     outputs:
       artifact-dir: ${{ steps.get-images.outputs.artifact-dir }}
+      to-retest-3_6: ${{ steps.get-images.outputs.to-retest-3_6 }}
+      to-retest-3_7: ${{ steps.get-images.outputs.to-retest-3_7 }}
+      to-retest-3_8: ${{ steps.get-images.outputs.to-retest-3_8 }}
       to-rebuild-3_6: ${{ steps.get-images.outputs.to-rebuild-3_6 }}
       to-rebuild-3_7: ${{ steps.get-images.outputs.to-rebuild-3_7 }}
       to-rebuild-3_8: ${{ steps.get-images.outputs.to-rebuild-3_8 }}
-      to-push-3_6: ${{ steps.get-images.outputs.to-push-3_6 }}
-      to-push-3_7: ${{ steps.get-images.outputs.to-push-3_7 }}
-      to-push-3_8: ${{ steps.get-images.outputs.to-push-3_8 }}
 
     steps:
       - name: Clone Repo
@@ -254,7 +254,7 @@ jobs:
                           includes.append({'image': img, 'python-version': py_version, 'build-style': 'custom'})
 
           matrix = {'include': includes}
-          print(f'TEST MATRIX JOBS:\n\n{json.dumps(matrix, indent=4)}')
+          print(f'TEST MATRIX JOBS:\n{json.dumps(matrix, indent=4)}')
           matrix_json = json.dumps(matrix)
           print("::set-output name=test-matrix::matrix_json")
 
