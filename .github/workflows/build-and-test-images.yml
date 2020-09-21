@@ -263,7 +263,7 @@ jobs:
     needs: [create-test-matrix, parse-changes]
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.create-test-matrix.outputs.test-matrix) }}
+      matrix: ${{fromJson(needs.create-test-matrix.outputs.test-matrix)}}
     name: "Test ${{ matrix.image }} (Python ${{ matrix.python-version }}, ${{ matrix.build-style }} build)"
     env:
       IMAGE_NAME: ${{ matrix.image }}
