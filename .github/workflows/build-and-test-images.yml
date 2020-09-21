@@ -113,7 +113,7 @@ jobs:
               print(f"no images to re-test for Python {python_version}")
           else:
               to_retest = image_tree.get_dependents(to_retest)
-              print(Re-running tests on f"{len(to_retest)} images:\n\t{linesep.join(to_retest)}")
+              print(f"Re-running tests on {len(to_retest)} images:\n\t{linesep.join(to_retest)}")
               to_retest = ':'.join(to_retest)
 
           if len(to_rebuild) == 0:
