@@ -96,7 +96,7 @@ jobs:
                   retest_all = True
               elif outer_dir.startswith('cdl-'):
                   if filename != 'README.md':
-                      to_retest.append(outer_dir):
+                      to_retest.append(outer_dir)
                       if filepath.parts[1] != 'ci':
                           to_rebuild.append(outer_dir)
 
