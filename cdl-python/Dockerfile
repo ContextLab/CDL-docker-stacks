@@ -30,6 +30,7 @@ RUN if [ -n "$APT_PACKAGES" ]; then \
     && conda config --prepend channels conda-forge \
     && conda config --set channel_priority strict \
     && conda config --set show_channel_urls true \
+    && conda config --set remote_max_retries 5 \
     && if [ ! "$PYTHON_VERSION" = 3.8 ]; then \
            echo "installing Python=${PYTHON_VERSION}" \
            && conda install -y python=$PYTHON_VERSION; \
