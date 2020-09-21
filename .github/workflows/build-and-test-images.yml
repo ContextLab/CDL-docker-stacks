@@ -260,7 +260,7 @@ jobs:
 
   test-images:
     runs-on: ubuntu-latest
-      needs: [create-test-matrix, parse-changes]
+    needs: [create-test-matrix, parse-changes]
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.create-test-matrix.outputs.test-matrix) }}
