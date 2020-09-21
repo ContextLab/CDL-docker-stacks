@@ -225,7 +225,7 @@ jobs:
     env:
       PARSE_CHANGES_OUTPUT: ${{ toJson(needs.parse-changes.outputs) }}
     outputs:
-      test-matrix: ${{ steps.create-matrix.outputs.test-matrix }}
+      test-matrix: ${{ toJson(steps.create-matrix.outputs.test-matrix) }}
 
     steps:
       - name: Set up Python
