@@ -255,7 +255,8 @@ jobs:
 
           matrix = {'include': includes}
           print(f'TEST MATRIX JOBS:\n{json.dumps(matrix, indent=4)}')
-          matrix_json = json.dumps(matrix)
+          matrix_json = json.dumps(matrix).replace('"', '\\"')
+          print(matrix_json)
           print("::set-output name=test-matrix::matrix_json")
 
   test-images:
