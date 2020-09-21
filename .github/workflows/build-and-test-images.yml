@@ -246,7 +246,7 @@ jobs:
 
           for k, v in parse_changes_output.items():
               if k.startswith('to-retest-') and v != 0:
-                  py_version = int(k.split('-')[-1].replace('_', '.'))
+                  py_version = float(k.split('-')[-1].replace('_', '.'))
                   images = v.split(':')
                   for img in images:
                       includes.append({'image': img, 'python-version': py_version, 'build-style': 'default'})
