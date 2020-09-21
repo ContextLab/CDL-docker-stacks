@@ -92,7 +92,7 @@ jobs:
               filepath = Path(diff.b_path)
               outer_dir = filepath.parts[0]
               filename = filepath.name
-              if any(str(filepath).startswith(i) for i in triggers_testes_all):
+              if any(str(filepath).startswith(i) for i in triggers_retest_all):
                   retest_all = True
               elif outer_dir.startswith('cdl-'):
                   if filename != 'README.md':
