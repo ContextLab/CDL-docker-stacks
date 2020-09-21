@@ -257,7 +257,8 @@ jobs:
           print(f'TEST MATRIX JOBS:\n{json.dumps(matrix, indent=4)}')
           matrix_json = json.dumps(matrix).replace(' ', '')
           print(matrix_json)
-          print("::set-output name=test-matrix::matrix_json")
+          matrix_command = f"::set-output name=test-matrix::{matrix_json}"
+          print(matrix_command)
 
   test-images:
     runs-on: ubuntu-latest
