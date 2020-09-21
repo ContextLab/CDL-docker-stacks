@@ -83,56 +83,61 @@ jobs:
           new_state = repo.commit(new_sha)
           diff_tree = new_state.diff(old_state)
 
-          rebuild_all = False
-          trigger_rebuild_all = ['.github/workflows', 'CI-classes', 'conftest.py']
-          edited_images = []
-          edited_image_dirs = []
+          retest_all = False
+          triggers_retest_all = ['.github/workflows', 'CI-classes', 'conftest.py']
+          to_retest = []
+          to_rebuild = []
 
           for diff in diff_tree:
               filepath = Path(diff.b_path)
               outer_dir = filepath.parts[0]
-              filename = filepath.parts[-1]
-              if any(str(filepath).startswith(i) for i in trigger_rebuild_all):
-                  rebuild_all = True
+              filename = filepath.name
+              if any(str(filepath).startswith(i) for i in triggers_testes_all):
+                  retest_all = True
+              elif outer_dir.startswith('cdl-'):
+                  if filename != 'README.md':
+                      to_retest.append(outer_dir):
+                      if filepath.parts[1] != 'ci':
+                          to_rebuild.append(outer_dir)
 
-              if outer_dir.startswith('cdl-'):
-                  edited_image_dirs.append(outer_dir)
-
-              if filename == 'Dockerfile':
-                  edited_images.append(outer_dir)
-
-          edited_image_dirs = set(edited_image_dirs)
+          to_retest = set(to_retest)
+          to_rebuild = set(to_rebuild)
           image_tree = ImageTree(repo_path)
           linesep = '\n\t'
 
-          if rebuild_all:
-              to_rebuild = ':'.join(image_tree.all_images)
-              print("General-purpose file edited. Rebuilding all images")
-          elif len(edited_image_dirs) == 0:
-              to_rebuild = 0
-              print(f"no images to rebuild for Python {python_version}")
+          if retest_all:
+              to_retest = ':'.join(image_tree.all_images)
+              print("CI test-related file edited. Re-running tests on all images")
+          elif len(to_retest) == 0:
+              to_retest = 0
+              print(f"no images to re-test for Python {python_version}")
           else:
-              to_rebuild = image_tree.get_dependents(edited_image_dirs)
-              print(f"{len(to_rebuild)} images will be rebuilt:\n\t{linesep.join(to_rebuild)}")
+              to_retest = image_tree.get_dependents(to_retest)
+              print(Re-running tests on f"{len(to_retest)} images:\n\t{linesep.join(to_retest)}")
+              to_retest = ':'.join(to_retest)
+
+          if len(to_rebuild) == 0:
+              print(f"no image specs modified since {old_sha}. All images will be pulled instead of rebuilt")
+              to_rebuild = 0
+          else:
+              to_rebuild = image_tree.get_dependents(to_rebuild)
+              print(f"Rebuilding {len(to_rebuild)} image specs & downstream images changed since {old_sha}:\n\t{linesep.join(to_rebuild)}")
               to_rebuild = ':'.join(to_rebuild)
 
           if trigger_event == 'push':
-              if len(edited_images) == 0:
-                  print(f"no Dockerfiles modified since {old_sha}. Skipping push to Docker Hub")
-                  to_push = 0
-              else:
-                  to_push = image_tree.get_dependents(edited_images)
-                  print(f"{len(to_push)} images will be pushed to Docker Hub:\n\t{linesep.join(to_push)}")
-                  to_push = ':'.join(to_push)
+              print('Workflow triggered by push to master. Any rebuilt images will be pushed to Docker Hub')
+              push_images = 1
           else:
               print(f"Workflow triggered by non-push event: {trigger_event}. Skipping push to Docker Hub")
-              to_push = 0
+              push_images = 0
 
           py_v = python_version.replace('.', '_')
+          to_retest_command = f"::set-output name=to-retest-{py_v}::{to_retest}"
           to_rebuild_command = f"::set-output name=to-rebuild-{py_v}::{to_rebuild}"
-          to_push_command = f"::set-output name=to-push-{py_v}::{to_push}"
+          push_images_command = f"::set-output name=push-images-{py_v}::{push_images}"
+          print(to_retest_command)
           print(to_rebuild_command)
-          print(to_push_command)
+          print(push_images_command)
 
           artifact_dir = str(Path(repo_path).parent.joinpath('artifacts'))
           set_artifact_dir_command = f"::set-output name=artifact-dir::{artifact_dir}"
@@ -155,7 +160,8 @@ jobs:
     steps:
         # has to be a separate step because variables set via set-env aren't
         # accessible until the next step
-      - run: |
+      - name: Format Output Accessor Key
+        run: |
           to_rebuild_key="to-rebuild-${PYTHON_VERSION//./_}"
           echo "::set-env name=TO_REBUILD_KEY::$to_rebuild_key"
 
@@ -170,7 +176,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Rebuild and Export Images
+      - name: Rebuild and Export Updated Images
         if: env.TO_REBUILD != 0
         run: |
           TMPIFS=$IFS
@@ -215,27 +221,19 @@ jobs:
   create-test-matrix:
     name: Create Test Job Matrix
     runs-on: ubuntu-latest
-    needs: rebuild-images
+    needs: [parse-changes, rebuild-images]
     env:
-      BUILD_DATA_DIR: ${{ needs.parse-changes.outputs.artifact-dir }}/build-data
+      PARSE_CHANGES_OUTPUT: ${{ toJson(needs.parse-changes.outputs) }}
     outputs:
       test-matrix: ${{ steps.create-matrix.outputs.test-matrix }}
 
     steps:
-      - run: mkdir -p $BUILD_DATA_DIR
-
-      - name: Download Build Data Artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: build-data
-          path: $BUILD_DATA_DIR
-
       - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
+          uses: actions/setup-python@v2
+          with:
+            python-version: 3.8
 
-      - name: Create Test Matrix
+      - name: Create Matrix
         id: create-matrix
         shell: python
         run: |
@@ -243,15 +241,17 @@ jobs:
           from os import getenv
           from pathlib import Path
 
-          data_dir = Path(getenv('BUILD_DATA_DIR')).resolve()
           includes = list()
-          for f in data_dir.glob('images*'):
-              py_version = f.stem.replace('images_python', '')
-              images = f.read_text().splitlines()
-              for img in images:
-                  includes.append({'image': img, 'python-version': py_version, 'build-style': 'default'})
-                  if img != 'cdl-base':
-                      includes.append({'image': img, 'python-version': py_version, 'build-style': 'custom'})
+          parse_changes_output = json.loads(getenv("PARSE_CHANGES_OUTPUT"))
+
+          for k, v in parse_changes_output.items():
+              if k.startswith('to-retest') and v != 0:
+                  py_version = int(k.split('-')[-1].replace('_', '.'))
+                  images = v.split(':')
+                      for img in images:
+                          includes.append({'image': img, 'python-version': py_version, 'build-style': 'default'})
+                          if img != 'cdl-base':
+                              includes.append({'image': img, 'python-version': py_version, 'build-style': 'custom'})
 
           matrix = {'include': includes}
           print(f'TEST MATRIX JOBS:\n\n{json.dumps(matrix, indent=4)}')
@@ -259,12 +259,12 @@ jobs:
           print("::set-output name=test-matrix::matrix_json")
 
   test-images:
-    name: "Test ${{ matrix.image }} (Python ${{ matrix.python-version }}, ${{ matrix.build-style }} build)"
-    runs-on: ubuntu-latest
-    needs: [rebuild-images, create-test-matrix]
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.create-test-matrix.outputs.test-matrix) }}
+    name: "Test ${{ matrix.image }} (Python ${{ matrix.python-version }}, ${{ matrix.build-style }} build)"
+    runs-on: ubuntu-latest
+    needs: [create-test-matrix, rebuild-images]
     env:
       IMAGE_NAME: ${{ matrix.image }}
       PYTHON_VERSION: ${{ matrix.python-version }}
