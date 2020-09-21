@@ -338,7 +338,7 @@ jobs:
         if: matrix.build-style == 'custom'
         working-directory: "$GITHUB_WORKSPACE/$IMAGE_NAME"
         run: |
-          docker rmi $DOCKER_HUB_ORG/$IMAGE_NAME
+          docker rmi "${DOCKER_HUB_ORG}/${IMAGE_NAME}:${PYTHON_VERSION}"
           source ci/builds.sh
           build_custom
 
