@@ -317,7 +317,8 @@ jobs:
               else:
                   pref = 'pull'
 
-          print("::set-env name=pref::pref")
+          pref_command = f"::set-env name=pref::{pref}"
+          print(pref_command)
 
       - name: "Download Python $PYTHON_VERSION Image Artifacts"
         if: env.pref == 'build'
