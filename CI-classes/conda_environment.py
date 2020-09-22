@@ -22,8 +22,8 @@ class CondaEnvironment:
         requested_cmd = f'{installed_cmd} --from-history'
         raw_installed = self.container.run(command=installed_cmd, **self.run_kwargs)
         raw_requested = self.container.run(command=requested_cmd, **self.run_kwargs)
-        installed = json.loads(raw_installed.decode('utf-8'))
-        requested = json.loads(raw_requested.decode('utf-8'))
+        installed = json.loads(raw_installed)
+        requested = json.loads(raw_requested)
 
         for pkg_spec in installed['dependencies']:
             if isinstance(pkg_spec, dict):
