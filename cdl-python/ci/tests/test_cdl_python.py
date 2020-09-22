@@ -25,7 +25,7 @@ def test_correct_workdir_set(container):
 
 
 def test_pin_package_script_in_profile(container):
-    output = container.run('ls --almost-all', detach=False, remove=True)
+    output = container.run('ls --almost-all /etc/profile.d', detach=False, remove=True)
     assert 'pin_conda_package_version.sh' in output
 
 
