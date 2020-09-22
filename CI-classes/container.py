@@ -91,7 +91,7 @@ class Container:
             if line.startswith('Install:'):
                 packages = line.replace('Install: ', '').split('), ')
                 for pkg_spec in packages:
-                    pkg_name = pkg_name.split(':')[0]
+                    pkg_name = pkg_spec.split(':')[0]
                     if pkg_spec.endswith('automatic'):
                         install_method = 'automatic'
                     else:
