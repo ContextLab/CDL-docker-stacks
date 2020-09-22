@@ -323,12 +323,12 @@ jobs:
 
       - name: Load Pre-Built Image to be Tested
         if: env.download == '1' && matrix.build-style == 'default'
-        working-directory: $IMAGE_DIR
+        working-directory: ${{ env.IMAGE_DIR }}
         run: docker load -i ${IMAGE_NAME}.tar.gz
 
       - name: Load All Other Pre-Built Images
         if: env.download == '1' && matrix.build-style == 'custom'
-        working-directory: $IMAGE_DIR
+        working-directory: ${{ env.IMAGE_DIR }}
         run: |
           for img_archive in {.,}*; do
               if [[ "${img_archive%.*}" != "$IMAGE_NAME" ]]; then
@@ -338,7 +338,7 @@ jobs:
 
       - name: Build Custom Image with build-args
         if: matrix.build-style == 'custom'
-        working-directory: "$GITHUB_WORKSPACE/$IMAGE_NAME"
+        working-directory: ${{ github.workspace }}/${{ env.IMAGE_NAME }}
         run: |
           source ci/builds.sh
           build_custom
@@ -387,7 +387,7 @@ jobs:
 
       - name: Load Pre-Built Images from Artifacts
         if: env.TO_PUSH != 0
-        working-directory: $IMAGE_DIR
+        working-directory: ${{ env.IMAGE_DIR }}
         run: |
           for img_archive in *; do
               docker load -i $img_archive
@@ -400,7 +400,7 @@ jobs:
 
       - name: Push Images to Docker Hub
         if: env.TO_PUSH != 0
-        working-directory: $IMAGE_DIR
+        working-directory: ${{ env.IMAGE_DIR }}
         run: |
           for img_file in *; do
               img=$(echo $img_file | cut -d '.' -f 1)
