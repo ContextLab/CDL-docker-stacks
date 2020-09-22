@@ -45,17 +45,17 @@ def manage_containers(request, container):
     # remove container created during test function if:
     # A) one was created at all, and
     # B) it was run with remove=False
-    if container.running_container is not None:
-        if container.running_container.status != 'exited':
-            container.running_container.stop()
+    if container.curr_container_obj is not None:
+        if container.curr_container_obj.status != 'exited':
+            container.curr_container_obj.stop()
 
         try:
-            container.running_container.remove()
+            container.curr_container_obj.remove()
         except docker.errors.APIError:
             # container was removed in test function body
             pass
 
-        container.running_container = None
+        container.curr_container_obj = None
 
 
 def pytest_configure(config):
