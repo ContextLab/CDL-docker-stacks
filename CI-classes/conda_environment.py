@@ -15,7 +15,7 @@ class CondaEnvironment:
     def parse_config(self):
         config_cmd = 'conda config --show --json'
         raw_config = self.container.run(command=config_cmd, **self.run_kwargs)
-        return json.loads(raw_config.decode('utf-8'))
+        return json.loads(raw_config)
 
     def parse_packages(self):
         installed_cmd = 'conda env export --name base --json --no-builds'

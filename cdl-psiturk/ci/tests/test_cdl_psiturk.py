@@ -19,9 +19,9 @@ def test_mturk_options(container, conda_env):
     """if MTURK=true is passed as build-arg, should have pymysql installed"""
     container.expected_attrs.pop('apt_packages')
     installed_pymysql = conda_env.installed_packages.get('pymysql')
-    assert (installed_pymysql is not None,
-            '--build-arg MTURK=true was passed but PyMySQL is not installed')
+    assert installed_pymysql is not None, \
+        '--build-arg MTURK=true was passed but PyMySQL is not installed'
     requested_pymysql = conda_env.requested_packages.get('pymysql')
-    assert (installed_pymysql.matches_version(requested_pymysql),
-            f'installed PyMySQL version ({installed_pymysql.version}) does '
-            f'not match requested version ({requested_pymysql.version})')
+    assert installed_pymysql.matches_version(requested_pymysql), \
+        f'installed PyMySQL version ({installed_pymysql.version}) does not ' \
+        f'match requested version ({requested_pymysql.version})'

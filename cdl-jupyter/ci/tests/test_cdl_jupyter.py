@@ -19,9 +19,9 @@ def test_jupyter_apt_packages_installed(container):
     for apt_pkg in CDL_JUPYTER_APT_PACKAGES:
         pkg_installed = container.apt_packages.get(apt_pkg)
         assert pkg_installed is not None, f'{apt_pkg} is not installed'
-        assert (pkg_installed == 'manual',
-                f'{apt_pkg} was installed as a dependency of another package, '
-                'not manually')
+        assert pkg_installed == 'manual', (f'{apt_pkg} was installed as a '
+                                           'dependency of another package, '
+                                           'not manually')
 
 
 def test_ipython_config_in_container(container):
@@ -60,8 +60,7 @@ def test_nbextensions_enabled(container):
                 extensions.remove(ext)
                 break
 
-    assert (len(extensions) == 0,
-            f"notebook extensions not configured:\n\t{', '.join(extensions)}")
+    assert len(extensions) == 0, f"notebook extensions not configured:\n\t{', '.join(extensions)}"
 
 
 ########################################
