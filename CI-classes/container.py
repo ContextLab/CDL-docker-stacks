@@ -17,16 +17,15 @@ class Container:
 
         self.default_mountpoint = getenv("GITHUB_WORKSPACE")
         self.image_dir = Path(self.default_mountpoint).joinpath(self.image_name)
-        # collect expected image/container attributes for testing
-        self.expected_attrs = self._get_expected_attrs()
-        # parse installed apt packages for testing
-        self.apt_packages = self._get_apt_packages()
-
         # used by the manage_containers fixture to set container name
         # based on the currently running test function and remove all
         # containers once the test finishes
         self.curr_container_name = None
         self.curr_container_obj = None
+        # collect expected image/container attributes for testing
+        self.expected_attrs = self._get_expected_attrs()
+        # parse installed apt packages for testing
+        self.apt_packages = self._get_apt_packages()
 
     def _attrs_from_custom_args(self):
         filepath = self.image_dir.joinpath('ci', 'custom-args.sh')
