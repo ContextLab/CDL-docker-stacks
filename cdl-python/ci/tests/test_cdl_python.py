@@ -37,7 +37,7 @@ def test_pip_cache_removed(container):
 
 @pytest.mark.no_inherit_test
 def test_python_default_cmd(container):
-    c = container.run(command=None, shell=None)
+    c = container.run(command=None, shell=None, max_wait=-1)
     c.stop(timeout=1)
     default_cmd = c.attrs.get('Config').get('Cmd')
     assert default_cmd == ['python']
@@ -54,17 +54,19 @@ def test_run_script_mounted(container):
     lines = c.logs().decode('utf-8').strip().splitlines()
 
     # two print statements should've been executed
-    assert len(lines) == 2
+    assert len(lines) == 2, lines
 
     # text should be the same before/after being written to/read from file
     orig_message, file_message = lines
-    assert orig_message == file_message
+    assert orig_message == file_message, \
+        f'ORIGINAL:\n{orig_message}\n\nFILE:\n{file_message}'
 
     # should be able to access hostname from inside container, and it
     # should match the container ID (first 12 characters)
     hostname = orig_message.replace("Hello, world! I'm ", '').split()[0]
     container_id = c.id[:len(hostname)]
-    assert hostname == container_id
+    assert hostname == container_id, \
+        f'HOSTNAME:\t{hostname}\nCONTAINER ID\t{container_id}'
 
     # should be able to read the Python version from inside the container
     inside_py_version = orig_message.split()[-1]
@@ -98,23 +100,32 @@ def test_run_script_unmounted(container):
         # Python API method of implementing docker cp
         c.put_archive('/mnt', tf)
 
-    output = c.exec_run(['python', dest_filepath, 'testfile.txt'],
-                        detach=False,
-                        tty=True).decode('utf-8').strip()
+    exit_code, output = c.exec_run(['python', dest_filepath, 'testfile.txt'],
+                                   detach=False,
+                                   tty=True,
+                                   stdout=True,
+                                   stderr=True,
+                                   demux=True)
+    stdout, stderr = output
+    stdout, stderr = stdout.decode('utf-8').strip(), stderr.decode('utf-8').strip()
+    assert exit_code == 0, f'command failed with exit code: {exit_code}.\nstderr:\n{stderr}'
+
     lines = output.splitlines()
 
     # two print statements should've been executed
-    assert len(lines) == 2
+    assert len(lines) == 2, lines
 
     # text should be the same before/after being written to/read from file
     orig_message, file_message = lines
-    assert orig_message == file_message
+    assert orig_message == file_message, \
+        f'ORIGINAL:\n{orig_message}\n\nFILE:\n{file_message}'
 
     # should be able to access hostname from inside container, and it
     # should match the container ID (first 12 characters)
     hostname = orig_message.replace("Hello, world! I'm ", '').split()[0]
     container_id = c.id[:len(hostname)]
-    assert hostname == container_id
+    assert hostname == container_id, \
+        f'HOSTNAME:\t{hostname}\nCONTAINER ID\t{container_id}'
 
     # should be able to read the Python version from inside the container
     inside_py_version = orig_message.split()[-1]

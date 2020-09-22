@@ -181,8 +181,9 @@ class Container:
                         raise
                 except requests.ConnectionError as e:
                     # command didn't finish running in max_wait seconds
+                    _cmd = '' if cmd is None else ''.join(cmd)
                     raise TimeoutError(
-                        f"Command {' '.join(cmd)} during test function "
+                        f"Command {_cmd} during test function "
                         f"\"{self.curr_container_name.replace('_container', '')}\" "
                         f"timed out after {max_wait} seconds"
                     ) from e
