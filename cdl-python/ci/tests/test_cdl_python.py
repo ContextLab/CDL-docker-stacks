@@ -182,8 +182,10 @@ def test_strict_channel_priority(conda_env):
 def test_conda_cache_cleaned(container, conda_env):
     pkgs_dirs = conda_env.config.get('pkgs_dirs')
     for pkg_dir in pkgs_dirs:
-        log = container.run(f'ls -a {pkg_dir}', detach=False, remove=True)
+        c = container.run(f'ls -a {pkg_dir}', detach=True, remove=False)
+        log = c.logs().decode('utf-8').strip()
         assert 'No such file or directory' in log
+        c.remove()
 
 
 # TODO: figure out how to parametrize this with pytest-cases rather than looping
