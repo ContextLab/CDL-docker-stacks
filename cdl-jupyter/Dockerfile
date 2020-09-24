@@ -36,7 +36,7 @@ RUN echo "Building with Python $PYTHON_VERSION" \
         bzip2 \
         $APT_PACKAGES \
     && apt-get clean \
-    && rm -rf "/var/lib/apt/lists/*" \
+    && rm -rf /var/lib/apt/lists/* \
     && PY_MAJ_MIN="$(python -V | grep -Po '(?<=Python )([^.]*\.[^.]*)')" \
     && if (( $(echo "$PY_MAJ_MIN < 3.3" | bc -l) )); then \
            IPYTHON_VERSION=5.8.0; \
