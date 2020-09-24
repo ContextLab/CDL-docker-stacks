@@ -103,6 +103,7 @@ class Container:
     def run(self,
             command=None,
             shell='/bin/bash',
+            shell_flags='-c',
             detach=True,
             remove=False,
             tty=True,
@@ -147,9 +148,16 @@ class Container:
             ports = None
 
         if command is not None:
+            cmd = [shell]
+            if shell_flags is not None:
+                if isinstance(shell_flags, str):
+                    shell_flags = shell_flags.split()
+
+                cmd.extend(shell_flags)
+
             if isinstance(command, str):
                 command = [command]
-            cmd = [shell, '-c']
+
             cmd.extend(command)
         else:
             cmd = None

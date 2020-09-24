@@ -49,6 +49,7 @@ def test_run_script_mounted(container):
     expected_testfile_path = os.path.join(os.path.dirname(script_path), 'testfile.txt')
     c = container.run('simple_script.py testfile.txt',
                       shell='python',
+                      shell_flags=None,
                       mountpoint_container='/mnt',
                       mountpoint_local=repo_root)
     lines = c.logs().decode('utf-8').strip().splitlines()
