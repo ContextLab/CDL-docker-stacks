@@ -108,7 +108,11 @@ def test_run_script_unmounted(container):
                                    stderr=True,
                                    demux=True)
     stdout, stderr = output
-    stdout, stderr = stdout.decode('utf-8').strip(), stderr.decode('utf-8').strip()
+    if stdout is not None:
+        stdout = stdout.decode('utf-8').strip()
+    if stderr is not None:
+        stderr = stderr.decode('utf-8').strip()
+        
     assert exit_code == 0, f'command failed with exit code: {exit_code}.\nstderr:\n{stderr}'
 
     lines = output.splitlines()
