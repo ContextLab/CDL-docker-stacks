@@ -37,12 +37,13 @@ RUN if [ -n "$APT_PACKAGES" ]; then \
            conda install -Sy pip=$PIP_VERSION; \
        fi \
     && conda clean --all -f -y \
-    && pip install --no-cache-dir \
+    && pip install \
         psiturk==2.3.8 \
         $PIP_PACKAGES \
     && if [ $MTURK = true ]; then \
-           pip install --no-cache-dir pymysql==0.10.0; \
-       fi
+           pip install pymysql==0.10.0; \
+       fi \
+    && rm -rf ~/.cache/pip
 
 # set PsiTurk shell to launch automatically when run 
 CMD ["psiturk"]

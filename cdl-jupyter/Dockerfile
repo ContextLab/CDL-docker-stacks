@@ -73,7 +73,8 @@ RUN echo "Building with Python $PYTHON_VERSION" \
        fi \
     && conda clean --all -f -y \
     && if [ -n "$PIP_PACKAGES" ]; then \
-           pip install --no-cache-dir $PIP_PACKAGES; \
+           pip install $PIP_PACKAGES \
+           && rm -rf ~/.cache/pip; \
        fi \
     && jupyter notebook --generate-config \
     && ipython profile create \

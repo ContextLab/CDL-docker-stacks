@@ -82,8 +82,9 @@ RUN echo "Building with Python $PYTHON_VERSION" \
            conda install -Sy pip=$PIP_VERSION; \
        fi \
     && conda clean --all -f -y \
-    && pip install --no-cache-dir \
+    && pip install \
            git+https://github.com/paxtonfitzpatrick/hypertools.git@11aa6e84607e936179727dc4ecbcbac16c68cc98 \
            quail==0.2.0 \
            fastdtw==0.3.4 \
-           $PIP_PACKAGES
+           $PIP_PACKAGES \
+    && rm -rf ~/.cache/pip

@@ -47,7 +47,8 @@ RUN if [ -n "$APT_PACKAGES" ]; then \
            conda install -Sy pip=$PIP_VERSION; \
        fi \
     && if [ -n "$PIP_PACKAGES" ]; then \
-           pip install --no-cache-dir $PIP_PACKAGES; \
+           pip install $PIP_PACKAGES \
+           && rm -rf ~/.cache/pip; \
        fi \
     && conda clean --all -f -y \
     && source /etc/profile.d/pin_conda_package_version.sh \

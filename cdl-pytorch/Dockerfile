@@ -38,10 +38,11 @@ RUN echo "Building with Python $PYTHON_VERSION" \
         torchvision=0.7 \
         cpuonly \
         $CONDA_PACKAGES \
-    || pip install --no-cache-dir \
-        torch==1.6.0+cpu \
-        torchvision==0.7.0+cpu \
-        -f https://download.pytorch.org/whl/torch_stable.html) \
+    || pip install \
+           torch==1.6.0+cpu \
+           torchvision==0.7.0+cpu \
+           -f https://download.pytorch.org/whl/torch_stable.html \
+       && rm -rf ~/.cache/pip) \
     && source /etc/profile.d/pin_conda_package_version.sh \
     && pin_package pytorch exact equal \
     && pin_package torchvision exact equal \
@@ -52,5 +53,6 @@ RUN echo "Building with Python $PYTHON_VERSION" \
        fi \
     && conda clean --all -f -y \
     && if [ -n "$PIP_PACKAGES" ]; then \
-           pip install --no-cache-dir $PIP_PACKAGES; \
+           pip install $PIP_PACKAGES \
+           && rm -rf ~/.cache/pip; \
        fi

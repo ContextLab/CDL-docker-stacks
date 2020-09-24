@@ -43,7 +43,8 @@ RUN echo "Building with Python $PYTHON_VERSION" \
            conda install -Sy pip=$PIP_VERSION; \
        fi \
     && conda clean --all -f -y \
-    && pip install --no-cache-dir \
+    && pip install \
         nltools==0.4.2 \
         git+https://github.com/brainiak/brainiak.git@938151acff10cf49954f2c9933278de327b9da9d \
-        $PIP_PACKAGES
+        $PIP_PACKAGES \
+    && rm -rf ~/.cache/pip
