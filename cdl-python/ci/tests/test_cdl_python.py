@@ -45,13 +45,14 @@ def test_python_default_cmd(container):
 
 def test_run_script_mounted(container):
     repo_root = os.getenv("GITHUB_WORKSPACE")
-    script_path = os.path.join(repo_root, 'cdl-python', 'ci', 'simple_script.py')
-    expected_testfile_path = os.path.join(os.path.dirname(script_path), 'testfile.txt')
+    mountpoint_local = os.path.join(repo_root, 'cdl-python', 'ci')
+    script_path = os.path.join(mountpoint_local, 'simple_script.py')
+    expected_testfile_path = os.path.join(mountpoint_local, 'testfile.txt')
     c = container.run('simple_script.py testfile.txt',
                       shell='python',
                       shell_flags=None,
                       mountpoint_container='/mnt',
-                      mountpoint_local=repo_root)
+                      mountpoint_local=mountpoint_local)
     lines = c.logs().decode('utf-8').strip().splitlines()
 
     # two print statements should've been executed
@@ -115,7 +116,7 @@ def test_run_script_unmounted(container):
 
     assert exit_code == 0, f'command failed with exit code: {exit_code}.\nstderr:\n{stderr}'
 
-    lines = output.splitlines()
+    lines = stdout.splitlines()
 
     # two print statements should've been executed
     assert len(lines) == 2, lines
