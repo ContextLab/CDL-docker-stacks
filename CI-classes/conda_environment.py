@@ -65,7 +65,7 @@ class Package:
             self.delimiter = None
 
     def __repr__(self):
-        return f'<Package({str(self)})>'
+        return f'Package({str(self)})'
 
     def __str__(self):
         if self.delimiter is None:
@@ -117,11 +117,16 @@ class Package:
         if other.version is None or other.version == '*':
             return True
         elif other.delimiter == '=':
-            delim = '=='
+            other_delim = '=='
         else:
-            delim = other.delimiter
+            other_delim = other.delimiter
 
-        other_spec = Specifier(f'{delim}{other.version}')
+        if other.version.endswith('.*') and other_delim not in ('==', '!='):
+            other_version = other.version.split('.*')[0]
+        else:
+            other_version = other.version
+
+        other_spec = Specifier(f'{other_delim}{other_version}')
         return other_spec.contains(self.version)
 
 
