@@ -44,5 +44,5 @@ RUN if [ -n "$APT_PACKAGES" ]; then \
            pip install --no-cache-dir pymysql==0.10.0; \
        fi
 
-# set PsiTurk shell to launch automatically when run
+# set PsiTurk shell to launch automatically when run 
 CMD ["psiturk"]
