@@ -1,4 +1,5 @@
 import json
+from packaging.specifiers import Specifier
 
 
 class CondaEnvironment:
@@ -29,51 +30,48 @@ class CondaEnvironment:
             if isinstance(pkg_spec, dict):
                 pip_specs = pkg_spec['pip']
                 for pip_spec in pip_specs:
-                    pkg = Package(pip_spec, installer='pip')
+                    pkg = Package(pip_spec)
                     self.installed_packages[pkg.name] = pkg
             else:
-                pkg = Package(pkg_spec, installer='conda')
+                pkg = Package(pkg_spec)
                 self.installed_packages[pkg.name] = pkg
 
         for pkg_spec in requested['dependencies']:
-            pkg = Package(pkg_spec, installer='conda')
+            pkg = Package(pkg_spec)
             self.requested_packages[pkg.name] = pkg
 
         for pkg_spec in self.config.get('pinned_packages'):
-            pkg = Package(pkg_spec, installer=None)
+            pkg = Package(pkg_spec)
             self.pinned_packages[pkg.name] = pkg
 
 
 class Package:
-    def __init__(self, pkg_spec, installer):
-        self.installer = installer
-        if self.installer == 'pip':
-            self.delimiter = '=='
-        else:
-            self.delimiter = '='
-
-        name_version = pkg_spec.split(self.delimiter)
-        name = name_version[0]
-        if len(name_version) == 1:
-            version = '*'
-        elif len(name_version) == 2:
-            version = name_version[1]
-        elif len(name_version) > 2:
-            raise ValueError(f"Received unepected package spec format: {pkg_spec}")
-
-        self.name = name
+    def __init__(self, pkg_spec):
+        self.name = None
         self.major_version = None
         self.minor_version = None
         self.patch_version = None
         self.extra_labels = None
-        self._parse_version(version)
+
+        for spec_delim in ['==', '<=', '>=', '!=', '~=', '<', '>', '=']:
+            if spec_delim in pkg_spec:
+                self.delimiter = spec_delim
+                name, version = pkg_spec.split(self.delimiter)
+                self.name = name
+                self._parse_version(version)
+                break
+        else:
+            # just package name, no specifier
+            self.delimiter = None
 
     def __repr__(self):
-        return f'Package({self.name}, version: {self.version}, ' \
-               f'installer: {self.installer})'
+        return f'<Package({str(self)})>'
 
     def __str__(self):
-        return f'{self.name}{self.delimiter}{self.version}'
+        if self.delimiter is None:
+            return self.name
+        else:
+            return f'{self.name}{self.delimiter}{self.version}'
 
     @property
     def version(self):
@@ -101,29 +99,30 @@ class Package:
                 patch_version += remaining.pop(0)
 
             self.extra_labels = ''.join(remaining)
-
-        # pop from empty list (if no minor or patch version)
         except IndexError:
+            # popped from empty list (if no minor or patch version)
             pass
         finally:
             if patch_version != '':
                 self.patch_version = patch_version
 
     def matches_version(self, other):
-        if isinstance(other, Package):
-            other_version = other.version
+        """
+        returns true of self.version fits within the specification
+        given by other.version
+        """
+        if not isinstance(other, Package):
+            other = Package(other)
+
+        if other.version is None or other.version == '*':
+            return True
+        elif other.delimiter == '=':
+            delim = '=='
         else:
-            other_version = other
+            delim = other.delimiter
 
-        self_parts = self.version.split('.')
-        other_parts = other_version.split('.')
-        for self_part, other_part in zip(self_parts, other_parts):
-            if self_part == '*' or other_part == '*':
-                return True
-            elif self_part != other_part:
-                return False
-
-        return True
+        other_spec = Specifier(f'{delim}{other.version}')
+        return other_spec.contains(self.version)
 
 
 class Permadict(dict):
