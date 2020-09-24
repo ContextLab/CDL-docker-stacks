@@ -178,7 +178,6 @@ def test_conda_cache_cleaned(container, conda_env):
     for pkg_dir in pkgs_dirs:
         c = container.run(f'ls -a {pkg_dir}', remove=False)
         log = c.logs().decode('utf-8').strip()
-        c.remove()
         assert 'No such file or directory' in log
 
 
