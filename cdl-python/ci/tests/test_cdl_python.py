@@ -182,8 +182,7 @@ def test_strict_channel_priority(conda_env):
 def test_conda_cache_cleaned(container, conda_env):
     pkgs_dirs = conda_env.config.get('pkgs_dirs')
     for pkg_dir in pkgs_dirs:
-        c = container.run(f'ls -a {pkg_dir}', remove=False)
-        log = c.logs().decode('utf-8').strip()
+        log = container.run(f'ls -a {pkg_dir}', detach=False, remove=True)
         assert 'No such file or directory' in log
 
 
