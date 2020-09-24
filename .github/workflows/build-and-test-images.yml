@@ -209,14 +209,14 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: build-data
-          path: $BUILD_DATA_DIR
+          path: ${{ env.BUILD_DATA_DIR }}
 
       - name: Upload Compressed Image Artifacts
         if: env.TO_REBUILD != 0
         uses: actions/upload-artifact@v2
         with:
-          name: "images-python$PYTHON_VERSION"
-          path: $IMAGE_DIR
+          name: "images-python${{ env.PYTHON_VERSION }}"
+          path: ${{ env.IMAGE_DIR }}
 
   create-test-matrix:
     name: Create Test Job Matrix
@@ -318,8 +318,8 @@ jobs:
         if: env.download == '1'
         uses: actions/download-artifact@v2
         with:
-          name: "images-python$PYTHON_VERSION"
-          path: $IMAGE_DIR
+          name: "images-python${{ env.PYTHON_VERSION }}"
+          path: ${{ env.IMAGE_DIR }}
 
       - name: Load Pre-Built Image to be Tested
         if: env.download == '1' && matrix.build-style == 'default'
@@ -382,8 +382,8 @@ jobs:
         if: env.TO_PUSH != 0
         uses: actions/download-artifacts@v2
         with:
-          name: "images-python$PYTHON_VERSION"
-          path: $IMAGE_DIR
+          name: "images-python${{ env.PYTHON_VERSION }}"
+          path: ${{ env.IMAGE_DIR }}
 
       - name: Load Pre-Built Images from Artifacts
         if: env.TO_PUSH != 0
