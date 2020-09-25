@@ -139,10 +139,20 @@ def test_run_script_unmounted(container):
     assert inside_py_version == outside_py_version
 
     # file should exist at expected location
-    stat_msg = c.exec_run(['/bin/bash', '-c', f'stat {dest_filepath}'],
-                          detach=False,
-                          tty=True).decode('utf-8').strip()
-    assert "No such file or directory" not in stat_msg
+    exit_code, output = c.exec_run(['/bin/bash', '-c', f'stat {dest_filepath}'],
+                                   detach=False,
+                                   tty=True,
+                                   stdout=True,
+                                   stderr=True,
+                                   demux=True)
+    stdout, stderr = output
+    if stdout is not None:
+        stdout = stdout.decode('utf-8').strip()
+    if stderr is not None:
+        stderr = stderr.decode('utf-8').strip()
+
+    assert exit_code == 0, f'command failed with exit code: {exit_code}.\nstderr:\n{stderr}'
+    assert "No such file or directory" not in stdout
 
     # clean up
     os.remove(tarfile_name)
