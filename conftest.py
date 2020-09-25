@@ -47,8 +47,11 @@ def manage_containers(request, container):
     # B) it was run with remove=False
     if container.curr_container_obj is not None:
         try:
-            if container.curr_container_obj.status != 'exited':
+            try:
                 container.curr_container_obj.stop()
+            except docker.errors.NotFound:
+                # container was stopped in test function body
+                pass
 
             container.curr_container_obj.remove()
 
