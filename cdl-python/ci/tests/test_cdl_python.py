@@ -48,10 +48,11 @@ def test_run_script_mounted(container):
     mountpoint_local = os.path.join(repo_root, 'cdl-python', 'ci')
     script_path = os.path.join(mountpoint_local, 'simple_script.py')
     expected_testfile_path = os.path.join(mountpoint_local, 'testfile.txt')
+    workdir = container.expected_attrs.get('workdir')
     c = container.run(['simple_script.py', 'testfile.txt'],
                       shell='python',
                       shell_flags=None,
-                      mountpoint_container='/mnt',
+                      mountpoint_container=workdir,
                       mountpoint_local=mountpoint_local)
     lines = c.logs().decode('utf-8').strip().splitlines()
 
@@ -89,7 +90,8 @@ def test_run_script_unmounted(container):
     ci_dir = os.path.join(repo_root, 'cdl-python', 'ci')
     script_name = 'simple_script.py'
     tarfile_name = f'{script_name}.tar'
-    dest_filepath = f'/mnt/{script_name}'
+    workdir = container.expected_attrs.get('workdir')
+    dest_filepath = f'/{workdir}/{script_name}'
 
     # run from dir of tarfile so container paths are created correctly
     os.chdir(ci_dir)
@@ -100,9 +102,9 @@ def test_run_script_unmounted(container):
     c = container.run('sleep infinity', max_wait=-1)
     with open(tarfile_name, 'rb') as tf:
         # Python API method of implementing docker cp
-        c.put_archive('/mnt', tf)
+        c.put_archive(f'/{workdir}', tf)
 
-    exit_code, output = c.exec_run(['python', dest_filepath, 'testfile.txt'],
+    exit_code, output = c.exec_run(['python', dest_filepath],
                                    detach=False,
                                    tty=True,
                                    stdout=True,
