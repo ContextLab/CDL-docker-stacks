@@ -80,10 +80,11 @@ RUN echo "Building with Python $PYTHON_VERSION" \
     && ipython profile create \
     &&  sed -i \
         -e 's/^# c.Completer.use_jedi = True/c.Completer.use_jedi = False/' \
+        -e 's/^#c.Completer.use_jedi = True/c.Completer.use_jedi = False/' \
         -e 's/^# c.IPCompleter.use_jedi = True/c.IPCompleter.use_jedi = False/' \
         ~/.ipython/profile_default/ipython_config.py
 
-# set working directory 
+# set working directory
 WORKDIR $WORKDIR
 
 # set entrypoint & command to run container as executable
