@@ -83,7 +83,7 @@ RUN echo "Building with Python $PYTHON_VERSION" \
         -e 's/^# c.IPCompleter.use_jedi = True/c.IPCompleter.use_jedi = False/' \
         ~/.ipython/profile_default/ipython_config.py
 
-# set working directory
+# set working directory 
 WORKDIR $WORKDIR
 
 # set entrypoint & command to run container as executable
