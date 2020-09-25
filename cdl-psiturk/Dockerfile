@@ -33,6 +33,9 @@ RUN if [ -n "$APT_PACKAGES" ]; then \
         requests-oauthlib=1.3.0 \
         setproctitle=1.1.10 \
         $CONDA_PACKAGES \
+    && if [ $MTURK = true ]; then \
+           conda install -Sy pymysql=0.10.0; \
+       fi \
     && if [ -n "$PIP_VERSION" ]; then \
            conda install -Sy pip=$PIP_VERSION; \
        fi \
@@ -40,9 +43,6 @@ RUN if [ -n "$APT_PACKAGES" ]; then \
     && pip install \
         psiturk==2.3.8 \
         $PIP_PACKAGES \
-    && if [ $MTURK = true ]; then \
-           pip install pymysql==0.10.0; \
-       fi \
     && rm -rf ~/.cache/pip
 
 # set PsiTurk shell to launch automatically when run
