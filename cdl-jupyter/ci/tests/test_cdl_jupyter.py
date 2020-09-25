@@ -1,4 +1,5 @@
 import time
+from os import getenv
 
 
 CDL_JUPYTER_APT_PACKAGES = ['bc', 'bzip2']
@@ -36,7 +37,9 @@ def test_jedi_completion_disabled(container):
         remove=True
     ).splitlines()
     assert 'c.Completer.use_jedi = False' in configured_options
-    assert 'c.IPCompleter.use_jedi = False' in configured_options
+    if float(getenv("PYTHON_VERSION")) > 3.6:
+        # option not present in IPython version installed for Python 3.6 images
+        assert 'c.IPCompleter.use_jedi = False' in configured_options
 
 
 def test_nbextensions_enabled(container):
@@ -91,8 +94,8 @@ def test_server_runs_from_workdir(container):
 
 def test_server_provides_login_token(container):
     notebook_server = start_notebook_server(container)
-    valid_url = notebook_server.logs().decode('utf-8').strip().splitlines()[-1]
-    assert '/?token=' in valid_url
+    notebook_server_logs = notebook_server.logs().decode('utf-8').strip()
+    assert '/?token=' in notebook_server_logs
 
 
 def test_notebook_server_port(container):
@@ -101,9 +104,8 @@ def test_notebook_server_port(container):
     #     container.expected_attrs.pop('port')
 
     notebook_server = start_notebook_server(container)
-    valid_url = notebook_server.logs().decode('utf-8').strip().splitlines()[-1]
-    base_url = valid_url.split('/?token=')[0]
-    assert base_url.endswith(expected_port)
+    notebook_server_logs = notebook_server.logs().decode('utf-8').strip()
+    assert f':{expected_port}/' in notebook_server_logs
 
 
 # TODO: import requests; requests.get(notebook_url) -- how to confirm token is valid?)
