@@ -66,7 +66,7 @@ class Container:
 
     def _get_expected_attrs(self):
         # ARG lines in Dockerfile to be excluded from tests
-        attrs_ignore = ['base_image', 'debian_frontend', 'notebook_ip']
+        attrs_ignore = ['python_version', 'base_image', 'debian_frontend', 'notebook_ip']
         expected_attrs = self._attrs_from_dockerfile()
         if self.custom_build:
             custom_attrs = self._attrs_from_custom_args()
@@ -80,6 +80,7 @@ class Container:
         for attr in empty_attrs:
             expected_attrs.pop(attr)
 
+        expected_attrs['python_version'] = getenv('PYTHON_VERSION')
         return expected_attrs
 
     def _get_apt_packages(self):

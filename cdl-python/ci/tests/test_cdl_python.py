@@ -48,7 +48,7 @@ def test_run_script_mounted(container):
     mountpoint_local = os.path.join(repo_root, 'cdl-python', 'ci')
     script_path = os.path.join(mountpoint_local, 'simple_script.py')
     expected_testfile_path = os.path.join(mountpoint_local, 'testfile.txt')
-    c = container.run('simple_script.py testfile.txt',
+    c = container.run(['simple_script.py', 'testfile.txt'],
                       shell='python',
                       shell_flags=None,
                       mountpoint_container='/mnt',
