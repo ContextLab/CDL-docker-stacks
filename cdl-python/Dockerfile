@@ -57,7 +57,7 @@ RUN if [ -n "$APT_PACKAGES" ]; then \
     && pin_package setuptools major min \
     && pin_package pip major min
 
-# set working directory
+# set working directory 
 WORKDIR $WORKDIR
 
 # set default command
