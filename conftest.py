@@ -21,6 +21,9 @@ def container():
     # alternative to client.images.get() without having to know tag
     org_img_name = f'{org_name}/{image_name}'
     matching_images = client.images.list(name=org_img_name, all=False)
+    if isinstance(matching_images, docker.models.images.Image):
+        matching_images = [matching_images]
+        
     assert len(matching_images) == 1, ('Found multiple images matching '
                                        f'"{org_img_name}":\n\t\t'
                                        f'{", ".join(matching_images)}')
