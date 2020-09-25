@@ -34,7 +34,7 @@ def test_jedi_completion_disabled(container):
         "grep '^[^#]' ~/.ipython/profile_default/ipython_config.py",
         detach=False,
         remove=True
-    ).decode('utf-8').strip().splitlines()
+    ).splitlines()
     assert 'c.Completer.use_jedi = False' in configured_options
     assert 'c.IPCompleter.use_jedi = False' in configured_options
 
@@ -49,7 +49,7 @@ def test_nbextensions_enabled(container):
     output = container.run('jupyter nbextension list',
                            detach=False,
                            remove=True,
-                           tty=False).decode('utf-8').strip()
+                           tty=False)
     # remove ANSI color codes (still there despite tty=False)
     output = output.replace('\x1b[32m', '').replace('\x1b[31m', '').replace('\x1b[0m', '')
     for line in output.splitlines():
@@ -71,7 +71,7 @@ def test_nbextensions_configurator_enabled(container, conda_env):
     configurator_version = conda_env.installed_packages.get(
         'jupyter_nbextensions_configurator'
     ).version
-    nb_server_logs = notebook_server.logs.decode('utf-8').strip().splitlines()
+    nb_server_logs = notebook_server.logs().decode('utf-8').strip().splitlines()
     expected_log_msg = f'[jupyter_nbextensions_configurator] enabled {configurator_version}'
     assert nb_server_logs[1].endswith(expected_log_msg)
 
@@ -84,14 +84,14 @@ def test_server_runs_from_workdir(container):
         # prep for `test_all_custom_build_args_tested()`
         container.expected_attrs.pop('workdir')
 
-    nb_server_logs = notebook_server.logs.decode('utf-8').strip().splitlines()
+    nb_server_logs = notebook_server.logs().decode('utf-8').strip().splitlines()
     expected_log_msg = f'Serving notebooks from local directory: {expected_workdir}'
     assert nb_server_logs[2].endswith(expected_log_msg)
 
 
 def test_server_provides_login_token(container):
     notebook_server = start_notebook_server(container)
-    valid_url = notebook_server.logs.decode('utf-8').strip().splitlines()[-1]
+    valid_url = notebook_server.logs().decode('utf-8').strip().splitlines()[-1]
     assert '/?token=' in valid_url
 
 
@@ -101,7 +101,7 @@ def test_notebook_server_port(container):
         container.expected_attrs.pop('port')
 
     notebook_server = start_notebook_server(container)
-    valid_url = notebook_server.logs.decode('utf-8').strip().splitlines()[-1]
+    valid_url = notebook_server.logs().decode('utf-8').strip().splitlines()[-1]
     base_url = valid_url.split('/?token=')[0]
     assert base_url.endswith(expected_port)
 
