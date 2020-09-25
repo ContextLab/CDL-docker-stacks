@@ -91,7 +91,7 @@ def test_run_script_unmounted(container):
     script_name = 'simple_script.py'
     tarfile_name = f'{script_name}.tar'
     workdir = container.expected_attrs.get('workdir')
-    dest_filepath = f'/{workdir}/{script_name}'
+    dest_filepath = f'{workdir}/{script_name}'
 
     # run from dir of tarfile so container paths are created correctly
     os.chdir(ci_dir)
@@ -102,7 +102,7 @@ def test_run_script_unmounted(container):
     c = container.run('sleep infinity', max_wait=-1)
     with open(tarfile_name, 'rb') as tf:
         # Python API method of implementing docker cp
-        c.put_archive(f'/{workdir}', tf)
+        c.put_archive(f'{workdir}', tf)
 
     exit_code, output = c.exec_run(['python', dest_filepath],
                                    detach=False,
@@ -116,7 +116,9 @@ def test_run_script_unmounted(container):
     if stderr is not None:
         stderr = stderr.decode('utf-8').strip()
 
-    assert exit_code == 0, f'command failed with exit code: {exit_code}.\nstderr:\n{stderr}'
+    assert exit_code == 0, \
+        f'Command failed with exit code: {exit_code}.\n' \
+        f'stdout: {stdout}\nstderr: {stderr}'
 
     lines = stdout.splitlines()
 
@@ -153,7 +155,9 @@ def test_run_script_unmounted(container):
     if stderr is not None:
         stderr = stderr.decode('utf-8').strip()
 
-    assert exit_code == 0, f'command failed with exit code: {exit_code}.\nstderr:\n{stderr}'
+    assert exit_code == 0, \
+        f'Command failed with exit code: {exit_code}.\n' \
+        f'stdout: {stdout}\nstderr: {stderr}'
     assert "No such file or directory" not in stdout
 
     # clean up
