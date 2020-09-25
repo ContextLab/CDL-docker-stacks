@@ -330,7 +330,7 @@ jobs:
         if: env.download == '1' && matrix.build-style == 'custom'
         working-directory: ${{ env.IMAGE_DIR }}
         run: |
-          for img_archive in {.,}*; do
+          for img_archive in cdl-*; do
               if [[ "${img_archive%.*}" != "$IMAGE_NAME" ]]; then
                   docker load -i $img_archive
               fi
