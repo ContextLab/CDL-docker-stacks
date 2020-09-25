@@ -91,7 +91,8 @@ def test_run_script_unmounted(container):
     script_name = 'simple_script.py'
     tarfile_name = f'{script_name}.tar'
     workdir = container.expected_attrs.get('workdir')
-    dest_filepath = f'{workdir}/{script_name}'
+    dest_scriptpath = f'{workdir}/{script_name}'
+    expected_filepath = f'{workdir}/testfile.txt'
 
     # run from dir of tarfile so container paths are created correctly
     os.chdir(ci_dir)
@@ -104,7 +105,7 @@ def test_run_script_unmounted(container):
         # Python API method of implementing docker cp
         c.put_archive(f'{workdir}', tf)
 
-    exit_code, output = c.exec_run(['python', dest_filepath],
+    exit_code, output = c.exec_run(['python', dest_scriptpath, 'testfile.txt'],
                                    detach=False,
                                    tty=True,
                                    stdout=True,
@@ -143,7 +144,7 @@ def test_run_script_unmounted(container):
     assert inside_py_version == outside_py_version
 
     # file should exist at expected location
-    exit_code, output = c.exec_run(['/bin/bash', '-c', f'stat {dest_filepath}'],
+    exit_code, output = c.exec_run(['/bin/bash', '-c', f'stat {expected_filepath}'],
                                    detach=False,
                                    tty=True,
                                    stdout=True,
