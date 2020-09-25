@@ -45,5 +45,5 @@ RUN if [ -n "$APT_PACKAGES" ]; then \
        fi \
     && rm -rf ~/.cache/pip
 
-# set PsiTurk shell to launch automatically when run 
+# set PsiTurk shell to launch automatically when run
 CMD ["psiturk"]
