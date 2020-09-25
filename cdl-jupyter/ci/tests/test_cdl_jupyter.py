@@ -79,10 +79,10 @@ def test_nbextensions_configurator_enabled(container, conda_env):
 def test_server_runs_from_workdir(container):
     notebook_server = start_notebook_server(container)
     expected_workdir = container.expected_attrs.get('workdir')
-    if container.custom_build:
-        # pop the value if it's a custom-built container in order to
-        # prep for `test_all_custom_build_args_tested()`
-        container.expected_attrs.pop('workdir')
+    # if container.custom_build:
+    #     # pop the value if it's a custom-built container in order to
+    #     # prep for `test_all_custom_build_args_tested()`
+    #     container.expected_attrs.pop('workdir')
 
     nb_server_logs = notebook_server.logs().decode('utf-8').strip().splitlines()
     expected_log_msg = f'Serving notebooks from local directory: {expected_workdir}'
@@ -97,8 +97,8 @@ def test_server_provides_login_token(container):
 
 def test_notebook_server_port(container):
     expected_port = container.expected_attrs.get('port')
-    if container.custom_build:
-        container.expected_attrs.pop('port')
+    # if container.custom_build:
+    #     container.expected_attrs.pop('port')
 
     notebook_server = start_notebook_server(container)
     valid_url = notebook_server.logs().decode('utf-8').strip().splitlines()[-1]

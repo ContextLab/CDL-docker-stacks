@@ -15,10 +15,10 @@ def test_correct_python_version_installed(container, conda_env):
 
 def test_correct_workdir_set(container):
     expected_workdir = container.expected_attrs.get('workdir')
-    if container.custom_build:
-        # pop the value if it's a custom-built container in order to
-        # prep for `test_all_custom_build_args_tested()`
-        container.expected_attrs.pop('workdir')
+    # if container.custom_build:
+    #     # pop the value if it's a custom-built container in order to
+    #     # prep for `test_all_custom_build_args_tested()`
+    #     container.expected_attrs.pop('workdir')
 
     actual_workdir = container.run('pwd', detach=False, remove=True)
     assert actual_workdir == expected_workdir
@@ -235,7 +235,7 @@ def test_pinned_versions_installed(conda_env):
 ########################################
 @pytest.mark.custom_build_test
 def test_custom_apt_packages_installed(container):
-    custom_apt_pkgs = container.expected_attrs.pop('apt_packages')
+    custom_apt_pkgs = container.expected_attrs.get('apt_packages')
     for apt_pkg in custom_apt_pkgs:
         pkg_installed = container.apt_packages.get(apt_pkg)
         assert pkg_installed is not None, \
@@ -247,7 +247,7 @@ def test_custom_apt_packages_installed(container):
 
 @pytest.mark.custom_build_test
 def test_custom_conda_packages_installed(container, conda_env):
-    custom_conda_pkgs = container.expected_attrs.pop('conda_packages')
+    custom_conda_pkgs = container.expected_attrs.get('conda_packages')
     if isinstance(custom_conda_pkgs, str):
         custom_conda_pkgs = [custom_conda_pkgs]
 
@@ -267,14 +267,14 @@ def test_custom_conda_packages_installed(container, conda_env):
 
 @pytest.mark.custom_build_test
 def test_custom_pip_version_installed(container, conda_env):
-    custom_pip_version = container.expected_attrs.pop('pip_version')
+    custom_pip_version = container.expected_attrs.get('pip_version')
     installed_pip_version = conda_env.installed_packages.get('pip')
     assert installed_pip_version.matches_version(custom_pip_version)
 
 
 @pytest.mark.custom_build_test
 def test_custom_pip_packages_installed(container, conda_env):
-    custom_pip_pkgs = container.expected_attrs.pop('pip_packages')
+    custom_pip_pkgs = container.expected_attrs.get('pip_packages')
     if isinstance(custom_pip_pkgs, str):
         custom_pip_pkgs = [custom_pip_pkgs]
     # needs to handle both forms: pkg & pkg==version
@@ -297,16 +297,16 @@ def test_custom_pip_packages_installed(container, conda_env):
                 f'version, {pkg_version}'
 
 
-@pytest.mark.custom_build_test
-@pytest.mark.last
-def test_all_custom_build_args_tested(container):
-    # each custom_build_tests pops the attr tested, so if all have been
-    # covered by tests, none should be left by the last test (except
-    # python_version, which isn't changed for custom builds)
-    untested_attrs = container.expected_attrs
-    try:
-        untested_attrs.pop('python_version')
-    except KeyError:
-        pass
-
-    assert len(untested_attrs) == 0
+# @pytest.mark.custom_build_test
+# @pytest.mark.last
+# def test_all_custom_build_args_tested(container):
+#     # each custom_build_tests pops the attr tested, so if all have been
+#     # covered by tests, none should be left by the last test (except
+#     # python_version, which isn't changed for custom builds)
+#     untested_attrs = container.expected_attrs
+#     try:
+#         untested_attrs.pop('python_version')
+#     except KeyError:
+#         pass
+#
+#     assert len(untested_attrs) == 0
