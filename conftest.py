@@ -46,12 +46,13 @@ def manage_containers(request, container):
     # A) one was created at all, and
     # B) it was run with remove=False
     if container.curr_container_obj is not None:
-        if container.curr_container_obj.status != 'exited':
-            container.curr_container_obj.stop()
-
         try:
+            if container.curr_container_obj.status != 'exited':
+                container.curr_container_obj.stop()
+
             container.curr_container_obj.remove()
-        except docker.errors.APIError:
+
+        except (docker.errors.APIError, docker.errors.NotFound):
             # container was removed in test function body
             pass
 
