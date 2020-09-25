@@ -43,128 +43,128 @@ def test_python_default_cmd(container):
     assert default_cmd == ['python']
 
 
-def test_run_script_mounted(container):
-    repo_root = os.getenv("GITHUB_WORKSPACE")
-    mountpoint_local = os.path.join(repo_root, 'cdl-python', 'ci')
-    script_path = os.path.join(mountpoint_local, 'simple_script.py')
-    expected_testfile_path = os.path.join(mountpoint_local, 'testfile.txt')
-    workdir = container.expected_attrs.get('workdir')
-    c = container.run(['simple_script.py', 'testfile.txt'],
-                      shell='python',
-                      shell_flags=None,
-                      mountpoint_container=workdir,
-                      mountpoint_local=mountpoint_local)
-    lines = c.logs().decode('utf-8').strip().splitlines()
-
-    # two print statements should've been executed
-    assert len(lines) == 2, lines
-
-    # text should be the same before/after being written to/read from file
-    orig_message, file_message = lines
-    assert orig_message == file_message, \
-        f'ORIGINAL:\n{orig_message}\n\nFILE:\n{file_message}'
-
-    # should be able to access hostname from inside container, and it
-    # should match the container ID (first 12 characters)
-    hostname = orig_message.replace("Hello, world! I'm ", '').split()[0]
-    container_id = c.id[:len(hostname)]
-    assert hostname == container_id, \
-        f'HOSTNAME:\t{hostname}\nCONTAINER ID\t{container_id}'
-
-    # should be able to read the Python version from inside the container
-    inside_py_version = orig_message.split()[-1]
-    outside_py_version = container.expected_attrs.get('python_version')
-    assert inside_py_version == outside_py_version
-
-    # file should exist at expected location
-    assert os.path.isfile(expected_testfile_path)
-
-    # clean up
-    os.remove(expected_testfile_path)
-
-
-def test_run_script_unmounted(container):
-    # store cwd to return to after test
-    cwd = os.getcwd()
-    repo_root = os.getenv("GITHUB_WORKSPACE")
-    ci_dir = os.path.join(repo_root, 'cdl-python', 'ci')
-    script_name = 'simple_script.py'
-    tarfile_name = f'{script_name}.tar'
-    workdir = container.expected_attrs.get('workdir')
-    dest_scriptpath = f'{workdir}/{script_name}'
-    expected_filepath = f'{workdir}/testfile.txt'
-
-    # run from dir of tarfile so container paths are created correctly
-    os.chdir(ci_dir)
-    with tarfile.open(tarfile_name, 'w') as tf:
-        tf.add(script_name)
-
-    # start background process to keep container running
-    c = container.run('sleep infinity', max_wait=-1)
-    with open(tarfile_name, 'rb') as tf:
-        # Python API method of implementing docker cp
-        c.put_archive(f'{workdir}', tf)
-
-    exit_code, output = c.exec_run(['python', dest_scriptpath, 'testfile.txt'],
-                                   detach=False,
-                                   tty=True,
-                                   stdout=True,
-                                   stderr=True,
-                                   demux=True)
-    stdout, stderr = output
-    if stdout is not None:
-        stdout = stdout.decode('utf-8').strip()
-    if stderr is not None:
-        stderr = stderr.decode('utf-8').strip()
-
-    assert exit_code == 0, \
-        f'Command failed with exit code: {exit_code}.\n' \
-        f'stdout: {stdout}\nstderr: {stderr}'
-
-    lines = stdout.splitlines()
-
-    # two print statements should've been executed
-    assert len(lines) == 2, lines
-
-    # text should be the same before/after being written to/read from file
-    orig_message, file_message = lines
-    assert orig_message == file_message, \
-        f'ORIGINAL:\n{orig_message}\n\nFILE:\n{file_message}'
-
-    # should be able to access hostname from inside container, and it
-    # should match the container ID (first 12 characters)
-    hostname = orig_message.replace("Hello, world! I'm ", '').split()[0]
-    container_id = c.id[:len(hostname)]
-    assert hostname == container_id, \
-        f'HOSTNAME:\t{hostname}\nCONTAINER ID\t{container_id}'
-
-    # should be able to read the Python version from inside the container
-    inside_py_version = orig_message.split()[-1]
-    outside_py_version = container.expected_attrs.get('python_version')
-    assert inside_py_version == outside_py_version
-
-    # file should exist at expected location
-    exit_code, output = c.exec_run(['/bin/bash', '-c', f'stat {expected_filepath}'],
-                                   detach=False,
-                                   tty=True,
-                                   stdout=True,
-                                   stderr=True,
-                                   demux=True)
-    stdout, stderr = output
-    if stdout is not None:
-        stdout = stdout.decode('utf-8').strip()
-    if stderr is not None:
-        stderr = stderr.decode('utf-8').strip()
-
-    assert exit_code == 0, \
-        f'Command failed with exit code: {exit_code}.\n' \
-        f'stdout: {stdout}\nstderr: {stderr}'
-    assert "No such file or directory" not in stdout
-
-    # clean up
-    os.remove(tarfile_name)
-    os.chdir(cwd)
-    c.stop()
+# def test_run_script_mounted(container):
+#     repo_root = os.getenv("GITHUB_WORKSPACE")
+#     mountpoint_local = os.path.join(repo_root, 'cdl-python', 'ci')
+#     # script_path = os.path.join(mountpoint_local, 'simple_script.py')
+#     expected_testfile_path = os.path.join(mountpoint_local, 'testfile.txt')
+#     workdir = container.expected_attrs.get('workdir')
+#     c = container.run(['simple_script.py', 'testfile.txt'],
+#                       shell='python',
+#                       shell_flags=None,
+#                       mountpoint_container=workdir,
+#                       mountpoint_local=mountpoint_local)
+#     lines = c.logs().decode('utf-8').strip().splitlines()
+#
+#     # two print statements should've been executed
+#     assert len(lines) == 2, lines
+#
+#     # text should be the same before/after being written to/read from file
+#     orig_message, file_message = lines
+#     assert orig_message == file_message, \
+#         f'ORIGINAL:\n{orig_message}\n\nFILE:\n{file_message}'
+#
+#     # should be able to access hostname from inside container, and it
+#     # should match the container ID (first 12 characters)
+#     hostname = orig_message.replace("Hello, world! I'm ", '').split()[0]
+#     container_id = c.id[:len(hostname)]
+#     assert hostname == container_id, \
+#         f'HOSTNAME:\t{hostname}\nCONTAINER ID\t{container_id}'
+#
+#     # should be able to read the Python version from inside the container
+#     inside_py_version = orig_message.split()[-1]
+#     outside_py_version = container.expected_attrs.get('python_version')
+#     assert inside_py_version == outside_py_version
+#
+#     # file should exist at expected location
+#     assert os.path.isfile(expected_testfile_path)
+#
+#     # clean up
+#     os.remove(expected_testfile_path)
+#
+#
+# def test_run_script_unmounted(container):
+#     # store cwd to return to after test
+#     cwd = os.getcwd()
+#     repo_root = os.getenv("GITHUB_WORKSPACE")
+#     ci_dir = os.path.join(repo_root, 'cdl-python', 'ci')
+#     script_name = 'simple_script.py'
+#     tarfile_name = f'{script_name}.tar'
+#     workdir = container.expected_attrs.get('workdir')
+#     dest_scriptpath = f'{workdir}/{script_name}'
+#     expected_filepath = f'{workdir}/testfile.txt'
+#
+#     # run from dir of tarfile so container paths are created correctly
+#     os.chdir(ci_dir)
+#     with tarfile.open(tarfile_name, 'w') as tf:
+#         tf.add(script_name)
+#
+#     # start background process to keep container running
+#     c = container.run('sleep infinity', max_wait=-1)
+#     with open(tarfile_name, 'rb') as tf:
+#         # Python API method of implementing docker cp
+#         c.put_archive(f'{workdir}', tf)
+#
+#     exit_code, output = c.exec_run(['python', dest_scriptpath, 'testfile.txt'],
+#                                    detach=False,
+#                                    tty=True,
+#                                    stdout=True,
+#                                    stderr=True,
+#                                    demux=True)
+#     stdout, stderr = output
+#     if stdout is not None:
+#         stdout = stdout.decode('utf-8').strip()
+#     if stderr is not None:
+#         stderr = stderr.decode('utf-8').strip()
+#
+#     assert exit_code == 0, \
+#         f'Command failed with exit code: {exit_code}.\n' \
+#         f'stdout: {stdout}\nstderr: {stderr}'
+#
+#     lines = stdout.splitlines()
+#
+#     # two print statements should've been executed
+#     assert len(lines) == 2, lines
+#
+#     # text should be the same before/after being written to/read from file
+#     orig_message, file_message = lines
+#     assert orig_message == file_message, \
+#         f'ORIGINAL:\n{orig_message}\n\nFILE:\n{file_message}'
+#
+#     # should be able to access hostname from inside container, and it
+#     # should match the container ID (first 12 characters)
+#     hostname = orig_message.replace("Hello, world! I'm ", '').split()[0]
+#     container_id = c.id[:len(hostname)]
+#     assert hostname == container_id, \
+#         f'HOSTNAME:\t{hostname}\nCONTAINER ID\t{container_id}'
+#
+#     # should be able to read the Python version from inside the container
+#     inside_py_version = orig_message.split()[-1]
+#     outside_py_version = container.expected_attrs.get('python_version')
+#     assert inside_py_version == outside_py_version
+#
+#     # file should exist at expected location
+#     exit_code, output = c.exec_run(['/bin/bash', '-c', f'stat {expected_filepath}'],
+#                                    detach=False,
+#                                    tty=True,
+#                                    stdout=True,
+#                                    stderr=True,
+#                                    demux=True)
+#     stdout, stderr = output
+#     if stdout is not None:
+#         stdout = stdout.decode('utf-8').strip()
+#     if stderr is not None:
+#         stderr = stderr.decode('utf-8').strip()
+#
+#     assert exit_code == 0, \
+#         f'Command failed with exit code: {exit_code}.\n' \
+#         f'stdout: {stdout}\nstderr: {stderr}'
+#     assert "No such file or directory" not in stdout
+#
+#     # clean up
+#     os.remove(tarfile_name)
+#     os.chdir(cwd)
+#     c.stop()
 
 
 ########################################
