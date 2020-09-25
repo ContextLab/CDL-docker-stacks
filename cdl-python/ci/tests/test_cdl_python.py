@@ -216,15 +216,15 @@ def test_pinned_versions_installed(conda_env):
             f'pinned version ({pinned_pkg}'
 
 
-# TODO: figure out how to parametrize this with pytest-cases rather than looping
-def test_requested_versions_installed(conda_env):
-    for pkg_name, requested_pkg in conda_env.requested_packages.items():
-        installed_pkg = conda_env.installed_packages.get(pkg_name)
-        assert installed_pkg is not None, \
-            f'requested package {requested_pkg} is not installed'
-        assert installed_pkg.matches_version(requested_pkg), \
-            f'installed version of {pkg_name} ({installed_pkg}) does not match ' \
-            f'requested version ({requested_pkg})'
+# # TODO: figure out how to parametrize this with pytest-cases rather than looping
+# def test_requested_versions_installed(conda_env):
+#     for pkg_name, requested_pkg in conda_env.requested_packages.items():
+#         installed_pkg = conda_env.installed_packages.get(pkg_name)
+#         assert installed_pkg is not None, \
+#             f'requested package {requested_pkg} is not installed'
+#         assert installed_pkg.matches_version(requested_pkg), \
+#             f'installed version of {pkg_name} ({installed_pkg}) does not match ' \
+#             f'requested version ({requested_pkg})'
 
 
 # TODO: add test to import each module to check if installed properly and working
