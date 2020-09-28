@@ -30,7 +30,7 @@ figlet -kw $term_width "building $image_name"
 
 # build image and record time taken
 SECONDS=0
-docker build "$params"
+docker build $params
 duration=$SECONDS
 echo "finished in $duration seconds"
 
