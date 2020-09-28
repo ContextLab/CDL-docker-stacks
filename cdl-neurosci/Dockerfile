@@ -48,4 +48,3 @@ RUN echo "Building with Python $PYTHON_VERSION" \
         git+https://github.com/brainiak/brainiak.git@938151acff10cf49954f2c9933278de327b9da9d \
         $PIP_PACKAGES \
     && rm -rf ~/.cache/pip
-    

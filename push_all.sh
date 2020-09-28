@@ -17,7 +17,7 @@ yes '' | head -n 2
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 export repo_root=$repo_root
 
-all_imgs=($(cd $repo_root/CI-classes && python -c "
+all_imgs=($(cd $repo_root/CI && python -c "
 from os import getenv
 from image_tree import ImageTree
 img_tree = ImageTree(getenv('repo_root'))
