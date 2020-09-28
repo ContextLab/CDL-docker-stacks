@@ -419,7 +419,7 @@ jobs:
           to_push=${{ needs.parse-changes.outputs[env.TO_REBUILD_KEY] }}
           echo "::set-env name=TO_PUSH::$to_push"
 
-      - name: "Download Image Artifacts (Python ${{ env.PYTHON_VERSION }})"
+      - name: "Download Image Artifacts (Python ${{ matrix.python-version }})"
         if: env.TO_PUSH != 0
         uses: actions/download-artifacts@v2
         with:
