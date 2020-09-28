@@ -397,10 +397,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test-images, parse-changes]
     if: >
-      !contains(github.event.head_commit.message, 'no push') &&
-      !contains(github.event.pull_request.title, 'no push') &&
       github.repository_owner == 'ContextLab' &&
-      github.event_name == 'push'
+      github.event_name == 'push' &&
+      !contains(github.event.head_commit.message, 'no push') &&
+      !contains(github.event.pull_request.title, 'no push')
     strategy:
       fail-fast: true
       matrix:
