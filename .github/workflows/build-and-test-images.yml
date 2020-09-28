@@ -71,7 +71,7 @@ jobs:
           from pathlib import Path
           from git import Repo
 
-          sys.path.insert(0, 'CI-classes')
+          sys.path.insert(0, 'CI')
           from image_tree import ImageTree
           sys.path.pop(0)
 
@@ -88,7 +88,7 @@ jobs:
           diff_tree = new_state.diff(old_state)
 
           retest_all = False
-          triggers_retest_all = ['.github/workflows', 'CI-classes', 'conftest.py']
+          triggers_retest_all = ['.github/workflows', 'CI', 'conftest.py']
           to_retest = []
           to_rebuild = []
 
