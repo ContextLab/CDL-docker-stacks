@@ -421,7 +421,7 @@ jobs:
 
       - name: "Download Image Artifacts (Python ${{ matrix.python-version }})"
         if: env.TO_PUSH != 0
-        uses: actions/download-artifacts@v2
+        uses: actions/download-artifact@v2
         with:
           name: "images-python${{ env.PYTHON_VERSION }}"
           path: ${{ env.IMAGE_DIR }}
