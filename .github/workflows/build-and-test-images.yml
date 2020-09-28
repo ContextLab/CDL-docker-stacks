@@ -322,7 +322,14 @@ jobs:
           print(download_command)
 
           if download and build_style == 'custom':
-              parents_to_load = ':'.join(py_version_rebuilds)
+              parents_to_load = list()
+              for img in py_version_rebuilds:
+                  if img == image_name:
+                      break
+                  else:
+                      parents_to_load.append(img)
+
+              parents_to_load = ':'.join(parents_to_load)
               parents_to_load_command = f"::set-env name=PARENTS_TO_LOAD::{parents_to_load}"
               print(parents_to_load_command)
 
