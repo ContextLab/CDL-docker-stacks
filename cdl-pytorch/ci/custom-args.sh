@@ -8,7 +8,7 @@ export APT_PACKAGES="curl nano"
 # extra version-pinned conda packages
 export CONDA_PACKAGES="jupyterlab=2.1.5 pytest=5.4.3"
 # older but recent pip version
-export PIP_VERSION="20.0.2"
+export PIP_VERSION="20.2"
 # extra pip packages (including a GitHub install)
 export PIP_PACKAGES="nltools==0.4.2 git+https://github.com/ContextLab/supereeg.git@v0.2.1"
 # alternate working directory

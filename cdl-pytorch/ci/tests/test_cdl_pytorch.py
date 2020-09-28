@@ -4,7 +4,7 @@ def test_no_cuda_env_set(container):
 
 
 def test_pytorch(container):
-    cmd = """"
+    cmd = """
     import torch
     torch.manual_seed(0)
     x = torch.rand(5).tolist()
@@ -15,8 +15,3 @@ def test_pytorch(container):
     output = container.run(command=cmd, shell='python', detach=False, remove=True)
     result = output.splitlines()
     assert result == expected
-
-
-
-
-

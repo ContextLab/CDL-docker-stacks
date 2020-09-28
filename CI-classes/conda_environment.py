@@ -121,8 +121,11 @@ class Package:
         else:
             other_delim = other.delimiter
 
-        if other_delim in ('==', '!=') and (other.minor_version is None or
-                                            other.patch_version is None):
+        if (
+                other_delim in ('==', '!=') and
+                (other.minor_version is None or other.patch_version is None) and
+                not other.version.endswith('.*')
+        ):
             other_version = f'{other.version}.*'
         elif other_delim not in ('==', '!=') and other.version.endswith('.*'):
             other_version = other.version.split('.*')[0]

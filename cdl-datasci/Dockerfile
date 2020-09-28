@@ -83,7 +83,7 @@ RUN echo "Building with Python $PYTHON_VERSION" \
        fi \
     && conda clean --all -f -y \
     && pip install \
-           git+https://github.com/paxtonfitzpatrick/hypertools.git@11aa6e84607e936179727dc4ecbcbac16c68cc98 \
+           git+https://github.com/ContextLab/hypertools.git@3f45375682a8f12a1278dd1720290d75a50062a9 \
            quail==0.2.0 \
            fastdtw==0.3.4 \
            $PIP_PACKAGES \

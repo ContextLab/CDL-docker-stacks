@@ -21,9 +21,13 @@ def container():
     # alternative to client.images.get() without having to know tag
     org_img_name = f'{org_name}/{image_name}'
     matching_images = client.images.list(name=org_img_name, all=False)
-    assert len(matching_images) == 1, ('Found multiple images matching '
-                                       f'"{org_img_name}":\n\t\t'
-                                       f'{", ".join(matching_images)}')
+    if isinstance(matching_images, docker.models.images.Image):
+        matching_images = [matching_images]
+
+    assert len(matching_images) == 1, \
+        f'Found multiple images matching "{org_img_name}":\n\t\t' \
+        f'{", ".join([t for img in matching_images for t in img.tags])}'
+
     image = matching_images[0]
     container = Container(image)
     yield container

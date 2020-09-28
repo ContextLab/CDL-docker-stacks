@@ -28,6 +28,9 @@ env:
 jobs:
   parse-changes:
     name: "Determine Images to Rebuild and Push (Python ${{ matrix.python-version }})"
+    if: >
+      !contains(github.event.head_commit.message, 'no ci') &&
+      !contains(github.event.pull_request.title, 'no ci')
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -73,6 +76,7 @@ jobs:
           sys.path.pop(0)
 
           trigger_event = getenv("GITHUB_EVENT_NAME")
+          repo_owner = getenv("GITHUB_REPOSITORY").split('/')[0]
           python_version = getenv("PYTHON_VERSION")
           repo_path = getenv("GITHUB_WORKSPACE")
           old_sha = getenv("PREVIOUS_SHA")
@@ -124,11 +128,11 @@ jobs:
               print(f"Rebuilding {len(to_rebuild)} image specs & downstream images changed since {old_sha}:\n\t{linesep.join(to_rebuild)}")
               to_rebuild = ':'.join(to_rebuild)
 
-          if trigger_event == 'push':
-              print('Workflow triggered by push to master. Any rebuilt images will be pushed to Docker Hub')
+          if trigger_event == 'push' and repo_owner == 'ContextLab':
+              print('Workflow triggered by push to master branch of base repository. Any rebuilt images will be pushed to Docker Hub')
               push_images = 1
           else:
-              print(f"Workflow triggered by non-push event: {trigger_event}. Skipping push to Docker Hub")
+              print(f"Workflow triggered by {trigger_event} to {repo_owner}/CDL-docker-stacks. Skipping push to Docker Hub")
               push_images = 0
 
           py_v = python_version.replace('.', '_')
@@ -249,8 +253,11 @@ jobs:
                   py_version = k.split('-')[-1].replace('_', '.')
                   images = v.split(':')
                   for img in images:
-                      includes.append({'image': img, 'python-version': py_version, 'build-style': 'default'})
-                      if img != 'cdl-base':
+                      if img == 'cdl-base':
+                          if py_version == '3.8':
+                              includes.append({'image': img, 'python-version': py_version, 'build-style': 'default'})
+                      else:
+                          includes.append({'image': img, 'python-version': py_version, 'build-style': 'default'})
                           includes.append({'image': img, 'python-version': py_version, 'build-style': 'custom'})
 
           matrix = {'include': includes}
@@ -308,13 +315,25 @@ jobs:
 
           parse_changes_output = json.loads(getenv("PARSE_CHANGES_OUTPUT"))
           py_version_rebuilds = parse_changes_output[f"to-rebuild-{python_version.replace('.', '_')}"]
-          py_version_rebuilds = py_version_rebuilds.split(':')
+          py_version_rebuilds = str(py_version_rebuilds).split(':')
 
-          download = int(image_name in py_version_rebuilds)
-          pref_command = f"::set-env name=download::{download}"
-          print(pref_command)
+          download = int(image_name in py_version_rebuilds[1:])
+          download_command = f"::set-env name=download::{download}"
+          print(download_command)
 
-      - name: "Download Python $PYTHON_VERSION Image Artifacts"
+          if download and build_style == 'custom':
+              parents_to_load = list()
+              for img in py_version_rebuilds:
+                  if img == image_name:
+                      break
+                  else:
+                      parents_to_load.append(img)
+
+              parents_to_load = ':'.join(parents_to_load)
+              parents_to_load_command = f"::set-env name=PARENTS_TO_LOAD::{parents_to_load}"
+              print(parents_to_load_command)
+
+      - name: "Download Python ${{ matrix.python-version }} Image Artifacts"
         if: env.download == '1'
         uses: actions/download-artifact@v2
         with:
@@ -322,17 +341,32 @@ jobs:
           path: ${{ env.IMAGE_DIR }}
 
       - name: Load Pre-Built Image to be Tested
-        if: env.download == '1' && matrix.build-style == 'default'
+        if: >
+          env.download == '1' &&
+          matrix.build-style == 'default'
         working-directory: ${{ env.IMAGE_DIR }}
         run: docker load -i ${IMAGE_NAME}.tar.gz
 
-      - name: Load All Other Pre-Built Images
-        if: env.download == '1' && matrix.build-style == 'custom'
+      - name: Load Pre-Built Parent Images
+        if: >
+          env.download == '1' &&
+          matrix.build-style == 'custom'
         working-directory: ${{ env.IMAGE_DIR }}
         run: |
-          for img_archive in cdl-*; do
-              if [[ "${img_archive%.*}" != "$IMAGE_NAME" ]]; then
+          TMPIFS=$IFS
+          IFS=':' read -r -a parents_to_load <<< "$PARENTS_TO_LOAD"
+          IFS=$TMPIFS
+
+          for parent in "${parents_to_load[@]}"; do
+              img_archive="${parent}.tar.gz"
+              if [ -f $img_archive ]; then
+                  echo "loading parent: $img_archive"
                   docker load -i $img_archive
+              else
+                  echo "no parent image artifact named $img_archive"
+                  echo "image archives are: "
+                  ls
+                  exit 1
               fi
           done
 
@@ -344,7 +378,9 @@ jobs:
           build_custom
 
       - name: Pull Image from Docker Hub
-        if: env.download == '0' && matrix.build-style == 'default'
+        if: >
+          env.download == '0' &&
+          matrix.build-style == 'default'
         run: |
           if [[ "$IMAGE_NAME" == "cdl-base" ]]; then
               docker pull $DOCKER_HUB_ORG/$IMAGE_NAME:latest
@@ -357,9 +393,14 @@ jobs:
 
   push-to-docker-hub:
     name: "Push Updated Images to Docker Hub (Python ${{ matrix.python-version }})"
+
     runs-on: ubuntu-latest
     needs: [test-images, parse-changes]
-    if: github.repository_owner == 'ContextLab' && github.event_name == 'push'
+    if: >
+      github.repository_owner == 'ContextLab' &&
+      github.event_name == 'push' &&
+      !contains(github.event.head_commit.message, 'no push') &&
+      !contains(github.event.pull_request.title, 'no push')
     strategy:
       fail-fast: true
       matrix:
@@ -378,7 +419,7 @@ jobs:
           to_push=${{ needs.parse-changes.outputs[env.TO_REBUILD_KEY] }}
           echo "::set-env name=TO_PUSH::$to_push"
 
-      - name: "Download Python $PYTHON_VERSION Image Artifacts"
+      - name: "Download Image Artifacts (Python ${{ matrix.python-version }})"
         if: env.TO_PUSH != 0
         uses: actions/download-artifacts@v2
         with:
@@ -389,8 +430,21 @@ jobs:
         if: env.TO_PUSH != 0
         working-directory: ${{ env.IMAGE_DIR }}
         run: |
-          for img_archive in *; do
-              docker load -i $img_archive
+          TMPIFS=$IFS
+          IFS=':' read -r -a to_push_arr <<< "$TO_PUSH"
+          IFS=$TMPIFS
+
+          for img in "${to_push_arr[@]}"; do
+              img_archive="${img}.tar.gz"
+              if [ -f $img_archive ]; then
+                  echo "loading $img_archive"
+                  docker load -i $img_archive
+              else
+                  echo "no image artifact named $img_archive"
+                  echo "image archives are: "
+                  ls
+                  exit 1
+              fi
           done
 
       - name: Log into Docker Hub
@@ -400,13 +454,20 @@ jobs:
 
       - name: Push Images to Docker Hub
         if: env.TO_PUSH != 0
-        working-directory: ${{ env.IMAGE_DIR }}
         run: |
-          for img_file in *; do
-              img=$(echo $img_file | cut -d '.' -f 1)
+          TMPIFS=$IFS
+          IFS=':' read -r -a to_push_arr <<< "$TO_PUSH"
+          IFS=$TMPIFS
+
+          for img in "${to_push_arr[@]}"; do
               if [[ "$img" == "cdl-base" ]]; then
                   if [[ "$PYTHON_VERSION" == "3.8" ]]; then
-                      docker push "$DOCKER_HUB_ORG/$img:latest"
+                      full_name="$DOCKER_HUB_ORG/$img:latest"
+                      echo "pushing $full_name..."
+                      docker push $full_name
                   fi
               else
-                  docker push "$DOCKER_HUB_ORG/$IMG:$PYTHON_VERSION"
+                  full_name="$DOCKER_HUB_ORG/$IMG:$PYTHON_VERSION"
+                  echo "pushing $full_name..."
+                  docker push $full_name
+              fi

@@ -17,7 +17,7 @@ def test_psiturk_default_cmd(container):
 @pytest.mark.custom_build_test
 def test_mturk_options(container, conda_env):
     """if MTURK=true is passed as build-arg, should have pymysql installed"""
-    container.expected_attrs.pop('apt_packages')
+    container.expected_attrs.get('apt_packages')
     installed_pymysql = conda_env.installed_packages.get('pymysql')
     assert installed_pymysql is not None, \
         '--build-arg MTURK=true was passed but PyMySQL is not installed'

@@ -65,6 +65,7 @@ RUN echo "Building with Python $PYTHON_VERSION" \
                pandoc=2.10 \
            && pin_package jupyter_contrib exact \
            && pin_package nbconvert minor min \
+           && unpin_package jupyterlab_pygments \
            && jupyter nbextension enable --py widgetsnbextension --sys-prefix; \
        fi \
     && if [ -n "$PIP_VERSION" ]; then \
@@ -80,6 +81,7 @@ RUN echo "Building with Python $PYTHON_VERSION" \
     && ipython profile create \
     &&  sed -i \
         -e 's/^# c.Completer.use_jedi = True/c.Completer.use_jedi = False/' \
+        -e 's/^#c.Completer.use_jedi = True/c.Completer.use_jedi = False/' \
         -e 's/^# c.IPCompleter.use_jedi = True/c.IPCompleter.use_jedi = False/' \
         ~/.ipython/profile_default/ipython_config.py
 

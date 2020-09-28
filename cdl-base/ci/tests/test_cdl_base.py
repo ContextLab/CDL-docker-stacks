@@ -31,4 +31,4 @@ def test_apt_cache_removed(container):
     output = container.run('ls --almost-all /var/lib/apt/lists',
                            detach=False,
                            remove=True)
-    assert len(output) == 0
+    assert len(output) == 0, output
