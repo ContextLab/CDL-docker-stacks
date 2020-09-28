@@ -5,7 +5,7 @@ set -e
 
 image_name=$1
 image_dir="$GITHUB_WORKSPACE/$image_name"
-custom_args_file="$image_dir/ci/custom_args.sh"
+custom_args_file="$image_dir/ci/custom-args.sh"
 
 # params used for all custom builds
 params="--rm --force-rm
