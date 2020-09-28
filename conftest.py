@@ -24,9 +24,10 @@ def container():
     if isinstance(matching_images, docker.models.images.Image):
         matching_images = [matching_images]
 
-    assert len(matching_images) == 1, ('Found multiple images matching '
-                                       f'"{org_img_name}":\n\t\t'
-                                       f'{", ".join(matching_images)}')
+    assert len(matching_images) == 1, \
+        f'Found multiple images matching "{org_img_name}":\n\t\t' \
+        f'{", ".join([t for img in matching_images for t in img.tags])}'
+
     image = matching_images[0]
     container = Container(image)
     yield container
