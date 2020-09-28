@@ -8,7 +8,7 @@ on:
     paths:
       - '**/Dockerfile'
       - '**/ci/**'
-      - 'CI-classes/**'
+      - 'CI/**'
       - conftest.py
   push:
     branches:
@@ -16,7 +16,7 @@ on:
     paths:
       - '**/Dockerfile'
       - '**/ci/**'
-      - 'CI-classes/**'
+      - 'CI/**'
       - conftest.py
       - .github/workflows/*
 defaults:
@@ -183,6 +183,8 @@ jobs:
       - name: Rebuild and Export Updated Images
         if: env.TO_REBUILD != 0
         run: |
+          sudo apt-get update -y && sudo apt-get install -y figlet
+
           TMPIFS=$IFS
           IFS=':' read -r -a to_rebuild <<< "$TO_REBUILD"
           IFS=$TMPIFS
@@ -190,22 +192,13 @@ jobs:
           mkdir -p $BUILD_DATA_DIR
           mkdir -p $IMAGE_DIR
 
-          images_logfile="$BUILD_DATA_DIR/images_python$PYTHON_VERSION.txt"
-          buildtimes_logfile="$BUILD_DATA_DIR/buildtimes_python$PYTHON_VERSION.txt"
+          for img in "${to_rebuild[@]}"; do
+              $GITHUB_WORKSPACE/CI/build_default.sh $img
+          done
 
           for img in "${to_rebuild[@]}"; do
-              echo "Building $img..."
-              source "$GITHUB_WORKSPACE/$img/ci/builds.sh"
-
-              SECONDS=0
-              build_default
-              duration=$SECONDS
-
-              echo "finished in $duration"
               echo "Exporting $img..."
               docker save "$DOCKER_HUB_ORG/$img" | gzip > "$IMAGE_DIR/$img.tar.gz"
-              echo "$img" >> "$images_logfile"
-              echo "$duration" >> "$buildtimes_logfile"
           done
 
       - name: Upload Build Data Artifacts
