@@ -451,7 +451,7 @@ jobs:
         if: env.TO_PUSH != 0
         run: echo $"{{ secrets.DOCKER_HUB_PASSWORD }} | docker login \
                 --username $DOCKER_HUB_ORG --password-stdin
-        
+
       - name: Push Images to Docker Hub
         if: env.TO_PUSH != 0
         run: |
@@ -468,6 +468,5 @@ jobs:
                   fi
               else
                   full_name="$DOCKER_HUB_ORG/$IMG:$PYTHON_VERSION"
-                  echo "pushing $full_name..."
                   docker push $full_name
               fi
