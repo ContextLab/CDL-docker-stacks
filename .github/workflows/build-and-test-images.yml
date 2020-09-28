@@ -28,6 +28,9 @@ env:
 jobs:
   parse-changes:
     name: "Determine Images to Rebuild and Push (Python ${{ matrix.python-version }})"
+    if: >
+      !contains(github.event.head_commit.message, 'no ci') &&
+      !contains(github.event.pull_request.title, 'no ci')
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -324,7 +327,7 @@ jobs:
               print(parents_to_load_command)
 
 
-      - name: "Download Python ${{ env.PYTHON_VERSION }} Image Artifacts"
+      - name: "Download Python ${{ matrix.python-version }} Image Artifacts"
         if: env.download == '1'
         uses: actions/download-artifact@v2
         with:
@@ -332,12 +335,16 @@ jobs:
           path: ${{ env.IMAGE_DIR }}
 
       - name: Load Pre-Built Image to be Tested
-        if: env.download == '1' && matrix.build-style == 'default'
+        if: >
+          env.download == '1' &&
+          matrix.build-style == 'default'
         working-directory: ${{ env.IMAGE_DIR }}
         run: docker load -i ${IMAGE_NAME}.tar.gz
 
       - name: Load Pre-Built Parent Images
-        if: env.download == '1' && matrix.build-style == 'custom'
+        if: >
+          env.download == '1' &&
+          matrix.build-style == 'custom'
         working-directory: ${{ env.IMAGE_DIR }}
         run: |
           TMPIFS=$IFS
@@ -365,7 +372,9 @@ jobs:
           build_custom
 
       - name: Pull Image from Docker Hub
-        if: env.download == '0' && matrix.build-style == 'default'
+        if: >
+          env.download == '0' &&
+          matrix.build-style == 'default'
         run: |
           if [[ "$IMAGE_NAME" == "cdl-base" ]]; then
               docker pull $DOCKER_HUB_ORG/$IMAGE_NAME:latest
@@ -378,9 +387,14 @@ jobs:
 
   push-to-docker-hub:
     name: "Push Updated Images to Docker Hub (Python ${{ matrix.python-version }})"
+
     runs-on: ubuntu-latest
     needs: [test-images, parse-changes]
-    if: github.repository_owner == 'ContextLab' && github.event_name == 'push'
+    if: >
+      !contains(github.event.head_commit.message, 'no push') &&
+      !contains(github.event.pull_request.title, 'no push') &&
+      github.repository_owner == 'ContextLab' &&
+      github.event_name == 'push'
     strategy:
       fail-fast: true
       matrix:

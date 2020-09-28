@@ -15,8 +15,3 @@ def test_pytorch(container):
     output = container.run(command=cmd, shell='python', detach=False, remove=True)
     result = output.splitlines()
     assert result == expected
-
-
-
-
-
