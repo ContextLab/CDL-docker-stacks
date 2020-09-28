@@ -437,7 +437,7 @@ jobs:
           for img in "${to_push_arr[@]}"; do
               img_archive="${img}.tar.gz"
               if [ -f $img_archive ]; then
-                  echo "loading $img_archive"
+                  echo "loading $img_archive..."
                   docker load -i $img_archive
               else
                   echo "no image artifact named $img_archive"
@@ -449,7 +449,7 @@ jobs:
 
       - name: Log into Docker Hub
         if: env.TO_PUSH != 0
-        run: echo $"{{ secrets.DOCKER_HUB_PASSWORD }} | docker login \
+        run: echo ${{ secrets.DOCKER_HUB_PASSWORD }} | docker login \
                 --username $DOCKER_HUB_ORG --password-stdin
 
       - name: Push Images to Docker Hub
