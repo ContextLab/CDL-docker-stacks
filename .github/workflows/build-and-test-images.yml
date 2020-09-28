@@ -333,7 +333,6 @@ jobs:
               parents_to_load_command = f"::set-env name=PARENTS_TO_LOAD::{parents_to_load}"
               print(parents_to_load_command)
 
-
       - name: "Download Python ${{ matrix.python-version }} Image Artifacts"
         if: env.download == '1'
         uses: actions/download-artifact@v2
