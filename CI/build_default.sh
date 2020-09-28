@@ -46,7 +46,7 @@ size_post_flatten=$(docker image ls \
                     --format "{{.Size}}")
 echo "reduced image size from $size_pre_flatten to $size_post_flatten"
 docker rm tmp_container &> /dev/null
-docker rmi image-pre-flatten &> /dev/null
+docker rmi $pre_flatten_tag &> /dev/null
 
 # store some build info for later use
 echo "$img" >> "$images_logfile"

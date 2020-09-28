@@ -365,10 +365,8 @@ jobs:
 
       - name: Build Custom Image with build-args
         if: matrix.build-style == 'custom'
-        working-directory: ${{ github.workspace }}/${{ env.IMAGE_NAME }}
         run: |
-          source ci/builds.sh
-          build_custom
+          $GITHUB_WORKSPACE/CI/build_custom.sh $IMAGE_NAME
 
       - name: Pull Image from Docker Hub
         if: >
