@@ -74,9 +74,9 @@ def test_nbextensions_configurator_enabled(container, conda_env):
     configurator_version = conda_env.installed_packages.get(
         'jupyter_nbextensions_configurator'
     ).version
-    nb_server_logs = notebook_server.logs().decode('utf-8').strip().splitlines()
+    nb_server_logs = notebook_server.logs().decode('utf-8').strip()
     expected_log_msg = f'[jupyter_nbextensions_configurator] enabled {configurator_version}'
-    assert nb_server_logs[1].endswith(expected_log_msg)
+    assert expected_log_msg in nb_server_logs
 
 
 def test_server_runs_from_workdir(container):
@@ -87,9 +87,9 @@ def test_server_runs_from_workdir(container):
     #     # prep for `test_all_custom_build_args_tested()`
     #     container.expected_attrs.pop('workdir')
 
-    nb_server_logs = notebook_server.logs().decode('utf-8').strip().splitlines()
+    nb_server_logs = notebook_server.logs().decode('utf-8').strip()
     expected_log_msg = f'Serving notebooks from local directory: {expected_workdir}'
-    assert nb_server_logs[2].endswith(expected_log_msg)
+    assert expected_log_msg in nb_server_logs
 
 
 def test_server_provides_login_token(container):
