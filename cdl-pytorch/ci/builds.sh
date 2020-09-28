@@ -20,7 +20,6 @@ build_custom() {
         --build-arg PYTHON_VERSION \
         --build-arg APT_PACKAGES \
         --build-arg CONDA_PACKAGES \
-        --build-arg PIP_VERSION \
         --build-arg PIP_PACKAGES \
         --build-arg WORKDIR \
         --build-arg PORT \
