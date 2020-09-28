@@ -463,7 +463,7 @@ jobs:
               if [[ "$img" == "cdl-base" ]]; then
                   if [[ "$PYTHON_VERSION" == "3.8" ]]; then
                       full_name="$DOCKER_HUB_ORG/$img:latest"
-                      echo "pushing $full_name"
+                      echo "pushing $full_name..."
                       docker push $full_name
                   fi
               else
