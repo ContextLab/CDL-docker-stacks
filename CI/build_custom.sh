@@ -22,5 +22,5 @@ done
 
 params="$params $image_dir"
 
-source custom_args_file
+source $custom_args_file
 docker build "$params"
