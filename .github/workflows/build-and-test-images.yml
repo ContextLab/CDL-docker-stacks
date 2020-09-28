@@ -441,8 +441,9 @@ jobs:
 
       - name: Log into Docker Hub
         if: env.TO_PUSH != 0
-        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login \
-                --username "$DOCKER_HUB_ORG" --password-stdin
+        run: >
+          echo '${{ secrets.DOCKER_HUB_PASSWORD }}' | docker login --username
+          $DOCKER_HUB_ORG --password-stdin
 
       - name: Push Images to Docker Hub
         if: env.TO_PUSH != 0
