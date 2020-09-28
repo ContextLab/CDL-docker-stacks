@@ -468,5 +468,6 @@ jobs:
                   fi
               else
                   full_name="$DOCKER_HUB_ORG/$IMG:$PYTHON_VERSION"
+                  echo "pushing $full_name..."
                   docker push $full_name
               fi
