@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # builds the default version of an image
+set -e
 
 image_name=$1
 image_dir="$GITHUB_WORKSPACE/$image_name"
