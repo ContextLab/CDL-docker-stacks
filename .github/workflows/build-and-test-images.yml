@@ -464,3 +464,4 @@ jobs:
                   echo "pushing $full_name..."
                   docker push $full_name
               fi
+          done
