@@ -460,7 +460,7 @@ jobs:
                       docker push $full_name
                   fi
               else
-                  full_name="$DOCKER_HUB_ORG/$IMG:$PYTHON_VERSION"
+                  full_name="$DOCKER_HUB_ORG/$img:$PYTHON_VERSION"
                   echo "pushing $full_name..."
                   docker push $full_name
               fi
