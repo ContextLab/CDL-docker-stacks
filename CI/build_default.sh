@@ -25,6 +25,7 @@ params="$params -t $image_tag $image_dir"
 # some runner output formatting to help readability when building multiple images
 term_width=$(tput cols)
 printf '=%.0s' $(seq $term_width)
+echo
 figlet -kw $term_width "building $image_name"
 
 # build image, record time taken & final size
