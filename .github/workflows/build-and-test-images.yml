@@ -185,6 +185,7 @@ jobs:
         if: env.TO_REBUILD != 0
         run: |
           sudo apt-get update -y && sudo apt-get install -y figlet
+          echo '{"experimental": true}' | sudo tee -a /etc/docker/daemon.json
 
           TMPIFS=$IFS
           IFS=':' read -r -a to_rebuild <<< "$TO_REBUILD"
@@ -367,6 +368,7 @@ jobs:
       - name: Build Custom Image with build-args
         if: matrix.build-style == 'custom'
         run: |
+          echo '{"experimental": true}' | sudo tee -a /etc/docker/daemon.json
           $GITHUB_WORKSPACE/CI/build_custom.sh $IMAGE_NAME
 
       - name: Pull Image from Docker Hub
